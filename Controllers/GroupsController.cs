@@ -75,13 +75,15 @@ namespace FruityNET.Controllers
         {
             var existingGroup = _GroupStore.GetGroupById(Id);
             var groupMembers = _GroupStore.GetGroupMembers(existingGroup.Id);
+            var Owner = _GroupStore.GetGroupOwner(existingGroup.Id);
 
             var GroupDetailsDTO = new GroupDetailsDTO()
             {
                 Id = existingGroup.Id,
                 Name = existingGroup.Name,
                 Description = existingGroup.Description,
-                CreationDate = existingGroup.CreationDate
+                CreationDate = existingGroup.CreationDate,
+                GroupOwner = Owner.Username
             };
             foreach (var member in groupMembers)
             {
