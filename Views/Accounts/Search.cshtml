@@ -1,0 +1,139 @@
+@using Microsoft.AspNetCore.Identity
+@using FruityNET.Entities
+
+
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+
+
+@using FruityNET.DTOs
+
+
+
+@model SearchUserDTO
+
+@{
+    ViewData["Title"] = "Search User";
+}
+
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState["Error"].Errors.Count > 0)
+{
+    <div class="alert alert-danger">@ViewData.ModelState["Error"].Errors.First().ErrorMessage
+    </div>
+}
+
+
+
+        <form asp-action="Search" method="post" role="form">
+
+
+           
+
+
+                <div class="form-group >
+                    
+                    <label asp-for="Username">Search for a User
+                    </label>
+                    <input asp-for="Username" type="text" placeholder="Search by Username"  />
+                                       <button class="btn btn-default btn-circle" type="submit"><i class="fa fa-search" style="color: black;"></i></button>
+
+                </div>                                    
+                <span asp-validation-for="Username" class="text-danger"></span>
+
+                <br>
+               
+
+        </form>
+<br>
+
+@if(Model.Username != null)
+{
+    @foreach (var result in Model.Users)
+    {
+      
+        <table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">Result</th>
+      <th scope="col">Username </th>
+      <th scope="col">First Name </th>
+      <th scope="col">Last Name </th>
+      <th scope="col">Role </th>
+      <th scope="col"> </th>
+            <th scope="col"> </th>
+             @if(result.RequestIsPending){<th></th>}
+
+
+
+    </tr>
+  </thead>
+    <tbody>
+        <tr class="table-success">
+      <th scope="row">Success</th>
+      <td>@result.Username</td>
+      <td>@result.Firstname</td>
+      <td>@result.Lastname</td>
+      <td>@result.UserType</td>
+      <td> 
+        @if(result.UserId == UserManager.GetUserId(User))
+        {
+            <a class="btn btn-primary btn-sm"
+                        asp-action="Profile"
+                        >
+                        Your Profile
+                </a>
+        }
+        else
+        {
+           <a class="btn btn-primary btn-sm"
+                        asp-action="ViewProfileOfUser"
+                         asp-route-id="@result.Id">
+                        View Profile
+                </a>
+        }
+        </td>
+        <td>
+        @if(result.UserId != UserManager.GetUserId(User) && (result.isFriendsOfCurrentUser is false && result.RequestIsPending is false) )
+        {
+       
+             <a class="btn btn-info btn-sm"
+                        asp-controller="FriendList"
+
+                        asp-action="SendFriendInvite"
+
+                         asp-route-id="@result.ResultUserFriendListID">
+                        <i class='fas fa-user-plus' style='font-size:14px;color:white'></i>
+                          Send Friend Request
+                </a>
+         
+        }
+        @if(result.isFriendsOfCurrentUser )
+        {
+            <p>You and @result.Username are friends.</p>
+        }
+
+        @if(result.RequestIsPending)
+        {
+            <p>Pending Request</p>
+        }
+
+       
+        
+        
+        
+
+        </td>
+    
+          
+        
+
+    </tr>
+    </tbody>
+        </table>
+     
+
+
+    }
+}
+

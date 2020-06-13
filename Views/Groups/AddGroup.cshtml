@@ -1,0 +1,38 @@
+@using FruityNET.DTOs
+
+
+
+
+@model AddGroupDTO
+
+@{
+    ViewData["Title"] = "Create Group";
+}
+
+
+
+
+
+<form asp-action="AddGroup" method="post" role="form">
+
+
+                <div class="form-group">
+                    
+                    <label asp-for="Name">Name
+                    </label>
+                    <textarea  asp-for="Name" class="form-control"/></textarea>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    
+                    <label asp-for="Description">Description
+                    </label>
+                    <textarea  asp-for="Description" class="form-control"/></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                
+                
+                
+            <button type="submit" class="btn btn-primary">Post</button><br>
+        </form>

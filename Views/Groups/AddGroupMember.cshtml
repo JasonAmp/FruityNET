@@ -1,0 +1,34 @@
+@using FruityNET.DTOs
+
+
+
+
+@model AddGroupUserDTO
+
+@{
+    ViewData["Title"] = "Add Group Member";
+}
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState["Error"].Errors.Count > 0)
+{
+    <div class="alert alert-danger">@ViewData.ModelState["Error"].Errors.First().ErrorMessage
+    </div>
+}
+
+<form asp-action="AddGroupMember" method="post" role="form">
+
+                <div class="form-group">
+                    
+                    <label asp-for="Username">Username
+                    </label>
+                     <input  asp-for="Username" type="text"></input>
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    
+                   
+                
+                
+                
+            <button type="submit" class="btn btn-primary">Add to Group</button><br>
+        </form>

@@ -1,0 +1,31 @@
+@using Microsoft.AspNetCore.Identity
+@using FruityNET.DTOs
+
+
+
+@model AddPostDTO
+
+@{
+    ViewData["Title"] = "Post Status";
+}
+
+
+
+
+<form asp-action="Post" method="post" role="form">
+<p style="color: red;">@ViewBag.Message</p>
+
+
+                <div class="form-group">
+                    
+                    <label asp-for="Content">Content
+                    </label>
+                    <textarea  asp-for="Content" class="form-control"/></textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+
+                
+                
+                
+            <button type="submit" class="btn btn-primary">Post</button><br>
+        </form>

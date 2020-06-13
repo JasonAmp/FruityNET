@@ -1,0 +1,45 @@
+@using Microsoft.AspNetCore.Identity
+@using FruityNET.Entities
+
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Sign In";
+}
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState["Error"].Errors.Count > 0)
+{
+    <div class="alert alert-danger">@ViewData.ModelState["Error"].Errors.First().ErrorMessage
+    </div>
+}
+
+<form asp-action="Login" method="post" role="form">
+
+
+           <h3>Sign In</h3><br>
+
+                <div class="form-group col-md-4">
+                    
+                    <label asp-for="UserName">User Name
+                    </label>
+                    <input asp-for="UserName" class="form-control"/>
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-4">
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" class="form-control"/>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div><br>
+
+                <div class="form-group col-md-4">
+                    <div class="checkbox">
+                        <label asp-for="RememberMe">Remember Me</label>
+                        <input asp-for="RememberMe" />
+                    </div>
+                
+                </div>
+            <button type="submit" class="btn btn-primary">Sign In</button><br>
+        </form>

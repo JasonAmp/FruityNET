@@ -1,0 +1,43 @@
+@using FruityNET.DTOs
+
+@model GroupDetailsDTO
+
+@{
+    ViewData["Title"] = "Group Details";
+}
+<a class="btn btn-primary btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="AddGroupMember"
+
+                         asp-route-id="@Model.Id">
+                        Add User To Group
+                </a><br></br>
+<div class="card">
+  <div class="card-header">
+    @Model.Name
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">Description: @Model.Description</h5>
+    <p class="card-text">Created On: @Model.CreationDate</p>
+   
+  </div>
+</div>
+<br></br>
+
+
+<h3>Group Members</h3>
+<ul class="list-group">
+  @foreach (var user in Model.GroupMembers)
+  {
+        <li class="list-group-item">@user.Username
+         
+        </li>
+
+        
+
+  }
+  @if(Model.GroupMembers.Count is 0)
+  {
+    <p>Add Members To Group.</p>
+  }

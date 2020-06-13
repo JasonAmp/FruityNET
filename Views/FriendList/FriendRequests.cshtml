@@ -1,0 +1,54 @@
+@using FruityNET.DTOs
+
+
+
+@model FriendRequestViewDTO
+
+@{
+    ViewData["Title"] = "Friend Requests";
+}
+
+<h3>Friend Requests</h3><br><br><br>
+
+
+
+<h5>Incoming Requests</h5>
+@if(Model.IncomingRequests.Count is 0)
+{<p>No Incoming Requests</p>}
+@foreach (var request in Model.IncomingRequests)
+{
+    <div class="card">
+  <div class="card-body">
+    <h4 class="card-title">
+      @if(@request.Pending is true){<p>Pending</p>}</h4>
+    <p class="card-text">@request.Username</p>
+    <a class="btn btn-success"
+                        asp-action="AcceptRequest"
+                        asp-controller="FriendList"
+                        asp-route-id="@request.Id">
+                        Accept
+                </a>
+    <a class="btn btn-danger"
+                        asp-action="DeclineRequest"
+                        asp-controller="FriendList"
+                        asp-route-id="@request.Id">
+                        Decline
+                </a>
+    
+  </div></div><br>
+}
+<br>
+<br><br><br>
+<h5>Sent Requests</h5>
+@if(Model.OutgoingRequests.Count is 0)
+{<p>No Requests Sent</p>}
+@foreach (var request in Model.OutgoingRequests)
+{
+    <div class="card">
+  <div class="card-body">
+    <h4 class="card-title">
+    <h6 class="card-text">@request.Username</h6>
+    <h7>Awaiting Response </h7>
+    
+  </div></div><br>
+}

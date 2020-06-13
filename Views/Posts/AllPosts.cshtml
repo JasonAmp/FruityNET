@@ -1,0 +1,62 @@
+@using FruityNET.DTOs
+@using Microsoft.AspNetCore.Identity
+@using FruityNET.Entities
+
+
+
+@model PostViewDto
+
+@{
+    ViewData["Title"] = "Timeline";
+}
+
+@inject UserManager<User> UserManager
+
+ <a class="btn btn-primary btn-sm"
+                        asp-action="Post">
+                        Post Status
+                </a><br><br>
+
+@foreach (var post in Model.AllPosts)
+{
+    <div class="card">
+  <div class="card-body">
+    <h7 class="card-title">@post.Username</h7>
+    <h7 class="card-subtitle mb-2 text-muted">@post.DatePosted</h7>
+    <p class="card-text">@post.Content</p>
+    <a class="btn btn-default btn-sm"
+                        asp-action="ViewPost"
+                        asp-route-id="@post.Id" style="color: black;">
+                        <i class="fa fa-eye"></i>
+                        View
+                </a>
+    <a class="btn btn-default btn-sm"
+                        asp-action="AddCommentToPost"
+                        asp-route-id="@post.Id" style="color: black;">
+                        Comment
+                </a>
+
+      
+
+        @if(post.IdentityId == UserManager.GetUserId(User))
+        {
+            <a class="btn btn-default btn-sm"
+                        asp-action="Edit"
+                        asp-route-id="@post.Id">
+                        <i class="fa fa-edit" style="font-size:12px;color: black;"></i>
+                </a>
+
+                 <a class="btn btn-danger btn-sm"
+                        asp-action="Delete"
+                        asp-route-id="@post.Id">
+                        
+                        <i class="fa fa-remove" ></i>
+
+
+
+
+                </a>
+        }
+    
+  </div></div><br>
+}

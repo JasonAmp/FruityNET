@@ -1,0 +1,102 @@
+@using Microsoft.AspNetCore.Identity
+@using FruityNET.Entities
+
+
+
+
+
+@using FruityNET.DTOs
+
+
+
+@model SearchGroupViewModel
+
+@{
+    ViewData["Title"] = "Search Group";
+}
+
+
+
+
+
+
+        <form asp-action="SearchGroup" method="post" role="form">
+
+
+           
+<p style="color: red;">@ViewBag.Message</p>
+
+
+                <div class="form-group >
+                    
+                    <label asp-for="Groupname">Search for a Grouo
+                    </label>
+                    <input asp-for="Groupname" type="text" placeholder="Search by Name"  />
+                                      <button class="btn btn-info btn-sm" type="submit"><i class="fa fa-search"></i></button>
+
+                </div>                                    
+                <span asp-validation-for="Groupname" class="text-danger"></span>
+
+                <br>
+               
+
+        </form>
+<br>
+
+    @foreach (var result in Model.Groups)
+    {
+      
+        <table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">Result</th>
+      <th scope="col">Groupname </th>
+      <th scope="col">First Name </th>
+      <th scope="col">Last Name </th>
+      <th scope="col">Role </th>
+      <th scope="col"> </th>
+            <th scope="col"> </th>
+             @if(result.RequestIsPending){<th></th>}
+
+
+
+    </tr>
+  </thead>
+    <tbody>
+        <tr class="table-success">
+      <th scope="row">Success</th>
+      <td>@result.Groupname</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      
+      <td> 
+       
+           <a class="btn btn-primary btn-sm"
+                        asp-action="GroupDetails"
+                         asp-route-id="@result.GroupId">
+                        View Group
+                </a>
+        
+        </td>
+        <td>
+       
+       
+        
+        
+        
+
+        </td>
+    
+          
+        
+
+    </tr>
+    </tbody>
+        </table>
+     
+
+
+    
+}
+

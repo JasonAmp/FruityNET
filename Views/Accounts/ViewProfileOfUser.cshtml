@@ -1,0 +1,55 @@
+@model ProfileViewModel
+
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="card" style="width: 18rem;">
+  <img class="card-img-top" src="~/css/default-profile.png" alt="Card image cap">
+  <div class="card-body">
+    <h3 class="card-title" style="text-align: center;">@Model.FirstName @Model.LastName</h3>
+    <h6 class="card-text" style="text-align: center;">About Me</h6>
+  </div>
+  <ul class="list-group ">
+    <li class="list-group-item">Location: @Model.Location</li>
+    <li class="list-group-item">Occupation: @Model.Occupation</li>
+    <li class="list-group-item">Last Active: @Model.LastActive</li>
+        <li class="list-group-item">Member Since: @Model.JoinDate</li>
+                <li class="list-group-item" style="color: red;">Role:  @Model.UserType</li>
+
+
+  </ul>
+  
+</div>
+
+<br>
+<h3>Groups</h3>
+<ul class="list-group">
+  @foreach (var group in Model.Groups)
+      {
+        <li class="list-group-item">@group.Name</li>
+
+        
+
+    }
+
+    @if(Model.Groups.Count is 0)
+    {
+       <li class="list-group-item">No Groups</li>
+    }
+     
+</ul><br>
+
+<h3>Friends</h3>
+<ul class="list-group">
+  @foreach (var friend in Model.Friends)
+  {
+    <li class="list-group-item">@friend.Username</li>
+
+  }
+  @if(Model.Friends.Count is 0)
+  {
+    <p>No Friends</p>
+  }
+ 
+</ul>
