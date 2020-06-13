@@ -90,6 +90,12 @@
                         asp-route-id="@group.Id">
                        @group.Name
           </a>
+          <a class="btn btn-danger btn-sm"
+                        asp-controller="Groups"
+                        asp-action="Delete"
+                        asp-route-id="@group.Id">
+                      Delete Group
+          </a>
         </li>
 
         

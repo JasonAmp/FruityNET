@@ -1,0 +1,25 @@
+@using FruityNET.Entities
+
+
+
+
+@model Group
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+
+    <div class="alert alert-danger">Are you sure you want to Delete @Model.Name ?
+    </div>
+
+
+<form asp-action="Delete" method="post" role="form">
+
+         
+                   
+                
+                
+                
+            <button type="submit" class="btn btn-danger">Delete Group</button><br>
+        </form>

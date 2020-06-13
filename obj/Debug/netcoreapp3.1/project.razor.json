@@ -20626,6 +20626,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/Delete.cshtml",
+      "TargetPath": "Views\\Groups\\Delete.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/AcceptRequest.cshtml",
       "TargetPath": "Views\\FriendList\\AcceptRequest.cshtml",
       "FileKind": "mvc"

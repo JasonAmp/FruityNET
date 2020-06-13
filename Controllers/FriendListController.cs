@@ -18,9 +18,7 @@ namespace FruityNET.Controllers
         private readonly IUserStore _userStore;
         private readonly IFriendsListStore _FriendListStore;
         private readonly IRequestStore _RequestStore;
-
         private readonly AcceptedRequestDTO _acceptedRequest;
-
         private readonly INotificationBox _notificationBox;
 
 

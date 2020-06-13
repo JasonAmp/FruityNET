@@ -179,6 +179,32 @@ namespace FruityNET.Controllers
 
 
 
+        [HttpGet]
+        public IActionResult Delete(Guid Id)
+        {
+            var existingGroup = _GroupStore.GetGroupById(Id);
+            return View(existingGroup);
+
+        }
+        [HttpPost]
+        public IActionResult Delete(Group group)
+        {
+            if (ModelState.IsValid)
+            {
+                var GroupUsers = _GroupStore.GetGroupMembers(group.Id);
+                foreach (var user in GroupUsers)
+                {
+                    _GroupStore.DeleteGroupUser(user);
+                }
+                _GroupStore.DeleteGroup(group);
+
+            }
+            return RedirectToAction("Profile", "Accounts");
+
+        }
+
+
+
 
     }
 }
