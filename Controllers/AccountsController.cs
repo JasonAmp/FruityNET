@@ -102,7 +102,7 @@ namespace FruityNET.Controllers
                 };
 
                 var result = await userManager.CreateAsync(user, model.Password);
-
+                //CreateUserAccount
                 var userAccount = new UserAccount
                 {
                     Username = model.UserName,
