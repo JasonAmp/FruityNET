@@ -19,6 +19,7 @@
 
 
 
+<h4>Group Search</h4><br>
 
         <form asp-action="SearchGroup" method="post" role="form">
 
@@ -29,10 +30,10 @@
 
                 <div class="form-group >
                     
-                    <label asp-for="Groupname">Search for a Grouo
+                    <label asp-for="Groupname">Search for a Group
                     </label>
-                    <input asp-for="Groupname" type="text" placeholder="Search by Name"  />
-                                      <button class="btn btn-info btn-sm" type="submit"><i class="fa fa-search"></i></button>
+                    <input asp-for="Groupname" type="text" placeholder="Group Name?"  />
+                                      <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
 
                 </div>                                    
                 <span asp-validation-for="Groupname" class="text-danger"></span>

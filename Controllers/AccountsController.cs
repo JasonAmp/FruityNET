@@ -155,15 +155,15 @@ namespace FruityNET.Controllers
 
 
         [HttpGet]
-        [Authorize]
         public IActionResult Profile()
         {
             var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
             if (_currentUser is null)
             {
                 return RedirectToAction("Login", "Accounts");
             }
+            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
+
             var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
             var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
 
@@ -198,11 +198,11 @@ namespace FruityNET.Controllers
         public IActionResult Edit()
         {
             var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
             if (_currentUser is null)
-            {
                 return RedirectToAction("Login", "Accounts");
-            }
+
+
+            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
 
             return View(new EditProfileViewModel
             {
@@ -252,6 +252,14 @@ namespace FruityNET.Controllers
 
             return View(new SearchUserDTO());
         }
+
+
+        [HttpGet]
+        public IActionResult NotFound()
+        {
+            return View();
+        }
+
 
 
         [HttpPost]
@@ -304,7 +312,7 @@ namespace FruityNET.Controllers
         {
             var existingAccount = _userStore.GetById(Id);
             if (existingAccount is null)
-                return View("404");
+                return View("NotFound");
 
             var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
             var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
@@ -363,6 +371,8 @@ namespace FruityNET.Controllers
         public IActionResult DeleteNotification(Guid Id)
         {
             var existingNotification = _notificationBox.GetNotificationById(Id);
+            if (existingNotification is null)
+                return RedirectToAction("NotFound", "Accounts");
             _notificationBox.DeleteNotifcation(existingNotification);
             return RedirectToAction("Notifications");
         }

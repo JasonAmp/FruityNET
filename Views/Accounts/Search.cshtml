@@ -23,6 +23,7 @@
     </div>
 }
 
+<h4>User Search</h4><br>
 
 
         <form asp-action="Search" method="post" role="form">
@@ -35,8 +36,8 @@
                     
                     <label asp-for="Username">Search for a User
                     </label>
-                    <input asp-for="Username" type="text" placeholder="Search by Username"  />
-                                       <button class="btn btn-default btn-circle" type="submit"><i class="fa fa-search" style="color: black;"></i></button>
+                    <input asp-for="Username" type="text" placeholder="User Name?"  />
+                                       <button class="btn btn-default" type="submit"><i class="fa fa-search" style="color: black;"></i></button>
 
                 </div>                                    
                 <span asp-validation-for="Username" class="text-danger"></span>

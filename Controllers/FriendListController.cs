@@ -49,6 +49,8 @@ namespace FruityNET.Controllers
         public IActionResult SendFriendInvite(Guid Id)
         {
             var FriendList = _FriendListStore.GetFriendListById(Id);
+            if (FriendList is null)
+                return RedirectToAction("NotFound", "Accounts");
 
             return View(FriendList);
         }
@@ -91,6 +93,8 @@ namespace FruityNET.Controllers
         public IActionResult FriendRequests()
         {
             var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (_currentUser is null)
+                return RedirectToAction("Login", "Accounts");
             var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
 
             var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
@@ -138,9 +142,18 @@ namespace FruityNET.Controllers
         public IActionResult AcceptRequest(Guid Id)
         {
             var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
+            if (_currentUser is null)
+                return RedirectToAction("Login", "Accounts");
             var request = _RequestStore.GetRequestById(Id);
+            if (request is null)
+                return RedirectToAction("NotFound", "Accounts");
+
             var requestUser = _RequestStore.GetRequestUserById(request.RequestUserId);
+
+
+
+            var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
+
             var existingUser = _userStore.GetByUsername(requestUser.Username);
 
             var FriendForCurrentUser = new FriendUser()
@@ -193,9 +206,14 @@ namespace FruityNET.Controllers
         public IActionResult DeclineRequest(Guid Id)
         {
             var request = _RequestStore.GetRequestById(Id);
+            if (request is null)
+                return RedirectToAction("NotFound", "Accounts");
             var requestUser = _RequestStore.GetRequestUserById(request.RequestUserId);
+
             var existingUser = _userStore.GetByIdentityUserId(requestUser.UserId);
             var CurrentUserAccount = _userStore.GetByIdentityUserId(_context.Users.Find(userManager.GetUserId(User)).Id);
+            if (CurrentUserAccount is null)
+                return RedirectToAction("Login", "Accounts");
             _RequestStore.DeleteRequest(request);
             _RequestStore.DeleteRequestUser(requestUser);
             CurrentUserAccount.IncomingRequests.Remove(request);
@@ -217,6 +235,8 @@ namespace FruityNET.Controllers
         public IActionResult UnfriendUser(Guid Id)
         {
             var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (_currentUser is null)
+                return RedirectToAction("Login", "Accounts");
             var FriendsListOfFriend = _FriendListStore.GetFriendListOfUser(_FriendListStore.GetFriendById(Id).UserId);
             var FriendUser = _FriendListStore.GetFriendById(Id);
             var CurrentUserAsFriendUser = _FriendListStore.GetFriendsOfUser(FriendsListOfFriend.Id)

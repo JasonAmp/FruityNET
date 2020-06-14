@@ -149,6 +149,9 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult SearchGroup()
         {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
+                return RedirectToAction("Login", "Accounts");
 
             return View(new SearchGroupViewModel());
 

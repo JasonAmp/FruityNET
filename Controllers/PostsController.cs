@@ -42,12 +42,10 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult Post()
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-            if (_currentUser is null)
-            {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
                 return RedirectToAction("Login", "Accounts");
-            }
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
 
             return View(new AddPostDTO
             {
@@ -59,10 +57,8 @@ namespace FruityNET.Controllers
         [HttpPost]
         public IActionResult Post(AddPostDTO addPostDTO)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-            if (_currentUser is null)
-                return RedirectToAction("Login", "Accounts");
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
 
             if (ModelState.IsValid)
             {
@@ -71,7 +67,7 @@ namespace FruityNET.Controllers
                 var Post = new Post
                 {
                     Content = addPostDTO.Content,
-                    UserId = _currentUser.Id
+                    UserId = CurrentUser.Id
 
                 };
                 _postStore.AddPost(Post);
@@ -88,14 +84,14 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult AllPosts()
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-            var friendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
-            friendList.Users = _FriendListStore.GetFriendsOfUser(friendList.Id);
-            if (_currentUser is null)
-            {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
                 return RedirectToAction("Login", "Accounts");
-            }
+
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+            var friendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
+            friendList.Users = _FriendListStore.GetFriendsOfUser(friendList.Id);
+
             var postViewDTO = new PostViewDto { AllPosts = new List<PostDTO>() };
             foreach (var friend in friendList.Users)
             {
@@ -113,7 +109,7 @@ namespace FruityNET.Controllers
                 }
             }
 
-            foreach (var post in _postStore.AllPostByCurrentUser(_currentUser.Id))
+            foreach (var post in _postStore.AllPostByCurrentUser(CurrentUser.Id))
             {
                 var PostDTO = new PostDTO
                 {
@@ -122,7 +118,7 @@ namespace FruityNET.Controllers
                     DatePosted = post.DatePosted,
                     Username = existingAccount.Username,
                     UserId = existingAccount.Id,
-                    IdentityId = _currentUser.Id
+                    IdentityId = CurrentUser.Id
                 };
                 postViewDTO.AllPosts.Add(PostDTO);
             }
@@ -132,14 +128,17 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult ViewPost(Guid Id)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-            if (_currentUser is null)
-            {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
                 return RedirectToAction("Login", "Accounts");
-            }
+
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+
 
             var post = _postStore.ViewPost(Id);
+            if (post is null)
+                return RedirectToAction("NotFound", "Accounts");
+
             var OwnerOfPost = _userStore.GetByIdentityUserId(post.UserId);
 
             var comments = from x in _commentStore.GetAllComments()
@@ -172,13 +171,16 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult Edit(Guid Id)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-            if (_currentUser is null)
-            {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
                 return RedirectToAction("Login", "Accounts");
-            }
+
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+
             var existingPost = _postStore.GetById(Id);
+            if (existingPost is null)
+                return RedirectToAction("NotFound", "Accounts");
+
 
             return View(new EditPostDTO()
             {
@@ -204,6 +206,9 @@ namespace FruityNET.Controllers
         public IActionResult Delete(Guid Id)
         {
             var existingPost = _postStore.GetById(Id);
+            if (existingPost is null)
+                return RedirectToAction("NotFound", "Accounts");
+
             _postStore.DeletePost(existingPost);
             return RedirectToAction("AllPosts");
         }
@@ -211,20 +216,17 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult AddCommentToPost(Guid Id)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-            _currentpost.Id = Id;
-
-            if (_currentUser is null)
-            {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
                 return RedirectToAction("Login", "Accounts");
-            }
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+            _currentpost.Id = Id;
 
             var existingPost = _postStore.ViewPost(Id);
             var addCommentDTO = new AddCommentDTO
             {
 
-                UserId = _currentUser.Id,
+                UserId = CurrentUser.Id,
 
             };
 
@@ -237,21 +239,26 @@ namespace FruityNET.Controllers
         [HttpPost]
         public IActionResult AddCommentToPost(AddCommentDTO addCommentDTO)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-            if (_currentUser is null)
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
                 return RedirectToAction("Login", "Accounts");
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+
 
             if (ModelState.IsValid)
             {
+                var existingPost = _postStore.ViewPost(_currentpost.Id);
+                if (existingPost is null)
+                    return RedirectToAction("NotFound", "Accounts");
+
+
                 var comment = new Comment()
                 {
                     Content = addCommentDTO.Content,
                     PostId = _currentpost.Id,
-                    UserId = _currentUser.Id
+                    UserId = CurrentUser.Id
                 };
 
-                var existingPost = _postStore.ViewPost(_currentpost.Id);
                 existingPost.Comments.Add(comment);
 
                 _commentStore.AddComment(comment);

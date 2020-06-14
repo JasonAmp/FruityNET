@@ -12,7 +12,7 @@
 
 
 
-<h5>Incoming Requests</h5>
+<h6>Incoming Requests</h6>
 @if(Model.IncomingRequests.Count is 0)
 {<p>No Incoming Requests</p>}
 @foreach (var request in Model.IncomingRequests)
@@ -22,13 +22,13 @@
     <h4 class="card-title">
       @if(@request.Pending is true){<p>Pending</p>}</h4>
     <p class="card-text">@request.Username</p>
-    <a class="btn btn-success"
+    <a class="btn btn-success btn-sm"
                         asp-action="AcceptRequest"
                         asp-controller="FriendList"
                         asp-route-id="@request.Id">
                         Accept
                 </a>
-    <a class="btn btn-danger"
+    <a class="btn btn-danger btn-sm"
                         asp-action="DeclineRequest"
                         asp-controller="FriendList"
                         asp-route-id="@request.Id">
@@ -39,7 +39,7 @@
 }
 <br>
 <br><br><br>
-<h5>Sent Requests</h5>
+<h6>Sent Requests</h6>
 @if(Model.OutgoingRequests.Count is 0)
 {<p>No Requests Sent</p>}
 @foreach (var request in Model.OutgoingRequests)
