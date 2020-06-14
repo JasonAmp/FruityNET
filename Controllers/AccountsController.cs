@@ -351,9 +351,11 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult Notifications()
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
+                return RedirectToAction("Login");
             var NotificationsViewDTO = new NotificationsViewDTO() { };
-            var Notifications = _notificationBox.GetUserNotifications(_currentUser.UserName);
+            var Notifications = _notificationBox.GetUserNotifications(CurrentUser.UserName);
             foreach (var notification in Notifications)
             {
                 NotificationsViewDTO.AllNotifications.Add(new NotificationDTO()
