@@ -1,5 +1,7 @@
 @using Microsoft.AspNetCore.Identity
 @using FruityNET.Entities
+@using FruityNET.Enums
+
 
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
@@ -9,8 +11,16 @@
 @{
     ViewData["Title"] = "Profile";
 }
+<br>
+@if(Model.UserType == UserType.Admin || Model.UserType == UserType.SiteOwner) 
+{
+    <a  class="btn btn-primary btn-sm" asp-area="" asp-controller="Accounts" asp-action="AdminPortal">Admin Portal
+</a><br>
+}
+<br>
 <h4>Your Profile</h4><br>
 
+   
 <div class="card" style="width: 18rem;">
   <img class="card-img-top" src="~/css/default-profile.png" alt="Card image cap">
   <div class="card-body">

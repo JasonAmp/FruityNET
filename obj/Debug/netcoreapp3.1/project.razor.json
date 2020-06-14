@@ -20536,6 +20536,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/RevokeAdminAccess.cshtml",
+      "TargetPath": "Views\\Accounts\\RevokeAdminAccess.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/DeclineRequest.cshtml",
       "TargetPath": "Views\\FriendList\\DeclineRequest.cshtml",
       "FileKind": "mvc"
@@ -20558,6 +20563,11 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/Login.cshtml",
       "TargetPath": "Views\\Accounts\\Login.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/AdminPortal.cshtml",
+      "TargetPath": "Views\\Accounts\\AdminPortal.cshtml",
       "FileKind": "mvc"
     },
     {
@@ -20641,6 +20651,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/GrantAdminAccess.cshtml",
+      "TargetPath": "Views\\Accounts\\GrantAdminAccess.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/SignOut.cshtml",
       "TargetPath": "Views\\Accounts\\SignOut.cshtml",
       "FileKind": "mvc"
@@ -20683,6 +20698,11 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Shared/_ValidationScriptsPartial.cshtml",
       "TargetPath": "Views\\Shared\\_ValidationScriptsPartial.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/NotAuthorized.cshtml",
+      "TargetPath": "Views\\Accounts\\NotAuthorized.cshtml",
       "FileKind": "mvc"
     },
     {

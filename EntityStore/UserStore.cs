@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FruityNET.Data;
+using FruityNET.DTOs;
 using FruityNET.Entities;
+using FruityNET.Enums;
 using FruityNET.IEntityStore;
 using FruityNET.Models;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +28,11 @@ namespace FruityNET.EntityStore
         public List<IdentityUser> GetAll()
         {
             return _Context.Users.ToList();
+        }
+
+        public List<UserAccount> GetAccounts()
+        {
+            return _Context.Account.ToList();
         }
 
         public UserAccount Edit(UserAccount userAccount, EditProfileViewModel model)
@@ -62,5 +69,14 @@ namespace FruityNET.EntityStore
         {
             return _Context.Account.FirstOrDefault(x => x.Username == Username);
         }
+
+        public UserAccount GrantAdmin(UserAccount Account)
+        {
+            Account.UserType = UserType.Admin;
+            _Context.SaveChanges();
+            return Account;
+        }
+
+
     }
 }

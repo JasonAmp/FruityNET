@@ -19,7 +19,9 @@ namespace FruityNET.IEntityStore
         UserAccount GetByUsername(string Username);
 
         List<IdentityUser> GetAll();
+        List<UserAccount> GetAccounts();
 
+        UserAccount GrantAdmin(UserAccount Account);
 
 
 

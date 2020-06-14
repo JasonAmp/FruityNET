@@ -47,6 +47,49 @@ namespace FruityNET.Controllers
             this.GroupStore = GroupStore;
         }
 
+        [HttpGet]
+        public IActionResult AdminPortal()
+        {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (CurrentUser is null)
+                return RedirectToAction("Login", "Accounts");
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+            if (existingAccount.UserType != UserType.Admin && existingAccount.UserType != UserType.SiteOwner)
+                return RedirectToAction("NotAuthorized");
+
+            var AdminPortalDTO = new AdminPortalViewDTO()
+            {
+                UserId = CurrentUser.Id,
+                Accounts = new List<AccountDTO>()
+            };
+            var AllAccounts = _userStore.GetAccounts().FindAll(x => x.UserId != CurrentUser.Id);
+            foreach (var user in AllAccounts)
+            {
+                var AccountDTO = new AccountDTO()
+                {
+                    Id = user.Id,
+                    UserId = user.UserId,
+                    Username = user.Username,
+                    UserType = user.UserType,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    LastActive = user.LastActive,
+                    DateJoined = user.DateJoined,
+                    Email = user.Email
+                };
+                AdminPortalDTO.Accounts.Add(AccountDTO);
+            }
+            return View(AdminPortalDTO);
+
+        }
+
+        [HttpGet]
+        public IActionResult NotAuthorized()
+        {
+
+            return View();
+
+        }
 
         public IActionResult Login()
         {
@@ -62,13 +105,21 @@ namespace FruityNET.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+
             if (ModelState.IsValid)
             {
 
                 var result = await signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
 
                 if (result.Succeeded)
+                {
+
+                    var existingAccount = _userStore.GetByUsername(model.UserName);
+                    existingAccount.LastActive = DateTime.Now;
+                    _context.SaveChanges();
                     return RedirectToAction("Index", "Home");
+                }
+
 
             }
             ModelState.AddModelError("Error", "Invalid Login Attempt");
@@ -110,6 +161,8 @@ namespace FruityNET.Controllers
                     Email = model.Email,
                     UserType = UserType.User,
                     UserId = user.Id.ToString(),
+                    DateJoined = DateTime.Now,
+                    LastActive = DateTime.Now,
                     FriendList = new List<FriendUser>(),
                     IncomingRequests = new List<Request>(),
                     OutgoingRequests = new List<Request>(),
@@ -175,7 +228,7 @@ namespace FruityNET.Controllers
                 Email = existingAccount.Email,
                 Username = existingAccount.Username,
                 Occupation = existingAccount.Occupation,
-                LastActive = DateTime.Now,
+                LastActive = existingAccount.LastActive,
                 JoinDate = existingAccount.DateJoined,
                 UserType = existingAccount.UserType,
                 Groups = GroupStore.GetAllGroupsByUser(existingAccount.UserId)
@@ -327,6 +380,7 @@ namespace FruityNET.Controllers
                 Occupation = existingAccount.Occupation,
                 UserType = existingAccount.UserType,
                 LastActive = existingAccount.LastActive,
+                JoinDate = existingAccount.DateJoined,
                 Groups = GroupStore.GetAllGroupsByUser(existingAccount.UserId)
             };
             foreach (var friend in FriendUsers)
@@ -377,6 +431,43 @@ namespace FruityNET.Controllers
                 return RedirectToAction("NotFound", "Accounts");
             _notificationBox.DeleteNotifcation(existingNotification);
             return RedirectToAction("Notifications");
+        }
+
+
+
+        [HttpGet]
+        public IActionResult GrantAdminAccess(Guid Id)
+        {
+            var existingAccount = _userStore.GetById(Id);
+            var AccountDTO = new AccountDTO();
+            AccountDTO.UserId = existingAccount.UserId;
+            return View(AccountDTO);
+        }
+
+        [HttpPost]
+        public IActionResult GrantAdminAccess(AccountDTO accountDTO)
+        {
+            var existingAccount = _userStore.GetById(accountDTO.Id);
+            _userStore.GrantAdmin(existingAccount);
+            return RedirectToAction("AdminPortal");
+        }
+
+        [HttpGet]
+        public IActionResult RevokeAdminAccess(Guid Id)
+        {
+            var existingAccount = _userStore.GetById(Id);
+            var AccountDTO = new AccountDTO();
+            AccountDTO.UserId = existingAccount.UserId;
+            return View(AccountDTO);
+        }
+
+        [HttpPost]
+        public IActionResult RevokeAdminAccess(AccountDTO accountDTO)
+        {
+            var existingAccount = _userStore.GetById(accountDTO.Id);
+            existingAccount.UserType = UserType.User;
+            _context.SaveChanges();
+            return RedirectToAction("AdminPortal");
         }
     }
 

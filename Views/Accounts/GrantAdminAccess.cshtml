@@ -1,0 +1,24 @@
+@using FruityNET.DTOs
+@model AccountDTO
+
+
+@{
+    ViewData["Title"] = "Grant Admin Access";
+}
+
+
+            <div class="alert alert-warning">Are you sure you want to grant Admin role to this User?
+    </div>
+        <h1>Grant Admin Access</h1>
+
+
+
+        <form asp-action="GrantAdminAccess" method="post" role="form">
+
+
+                
+            <button type="submit" class="btn btn-success">Confirm</button>  <a class="btn btn-default btn-sm"
+                        asp-action="AdminPortal">
+                        Cancel
+                </a><br>
+        </form>

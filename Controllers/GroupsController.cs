@@ -214,6 +214,8 @@ namespace FruityNET.Controllers
         public IActionResult RemoveUser(Guid Id)
         {
             var existingGroupMember = _GroupStore.GetGroupMemberById(Id);
+            if (existingGroupMember is null)
+                return RedirectToAction("NotFound", "Accounts");
             var GroupID = existingGroupMember.GroupId.ToString().Clone();
             var GroupMemberDTO = new GroupMemberDTO()
             {

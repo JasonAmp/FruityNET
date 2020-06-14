@@ -4,5 +4,7 @@ namespace FruityNET.Enums
     {
         Admin = 1,
         User = 0,
+
+        SiteOwner = 2
     }
 }
