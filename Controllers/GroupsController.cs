@@ -137,7 +137,8 @@ namespace FruityNET.Controllers
                         Type = GroupUserType.Member
                     };
                     _GroupStore.CreateGroupUser(GroupUser);
-                    return RedirectToAction("Profile", "Accounts");
+                    ViewBag.Message = "Success";
+                    return View(addGroupUserDTO);
                 }
 
 
@@ -200,6 +201,33 @@ namespace FruityNET.Controllers
                 }
                 _GroupStore.DeleteGroup(group);
 
+            }
+            return RedirectToAction("Profile", "Accounts");
+
+        }
+
+
+        [HttpGet]
+        public IActionResult RemoveUser(Guid Id)
+        {
+            var existingGroupMember = _GroupStore.GetGroupMemberById(Id);
+            var GroupID = existingGroupMember.GroupId.ToString().Clone();
+            var GroupMemberDTO = new GroupMemberDTO()
+            {
+                GroupId = new Guid(GroupID.ToString()),
+                Id = existingGroupMember.Id,
+                Username = existingGroupMember.Username
+            };
+            return View(GroupMemberDTO);
+
+        }
+        [HttpPost]
+        public IActionResult RemoveUser(GroupMemberDTO GroupMemberDTO)
+        {
+            if (ModelState.IsValid)
+            {
+
+                _GroupStore.DeleteGroupUser(_GroupStore.GetGroupMemberById(GroupMemberDTO.Id));
             }
             return RedirectToAction("Profile", "Accounts");
 

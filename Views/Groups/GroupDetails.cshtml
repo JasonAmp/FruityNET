@@ -1,4 +1,10 @@
 @using FruityNET.DTOs
+@using Microsoft.AspNetCore.Identity
+@using FruityNET.Entities
+
+
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
 
 @model GroupDetailsDTO
 
@@ -33,6 +39,18 @@
   @foreach (var user in Model.GroupMembers)
   {
         <li class="list-group-item">@user.Username
+          @if(user.UserId != UserManager.GetUserId(User) )
+          {
+             <a class="btn btn-danger btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="RemoveUser"
+
+                         asp-route-id="@user.Id">
+                        Remove
+                </a>
+          }
+         
          
         </li>
 

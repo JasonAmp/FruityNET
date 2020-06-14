@@ -1,0 +1,33 @@
+@using FruityNET.DTOs
+
+
+
+
+@model GroupMemberDTO
+
+@{
+    ViewData["Title"] = "DeleteUser";
+}
+
+
+    <div class="alert alert-danger">Are you sure you want to Remove member from Group?
+    </div>
+
+
+
+<form asp-action="RemoveUser" method="post" role="form">
+
+         
+                   
+                
+                
+                
+            <button type="submit" class="btn btn-danger">Remove</button> <a class="btn btn-default btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="GroupDetails"
+
+                         asp-route-id="@Model.GroupId">
+                        Back to Group
+                </a> <br>
+        </form>

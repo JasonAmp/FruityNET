@@ -15,6 +15,12 @@
     </div>
 }
 
+@if (!String.IsNullOrEmpty(ViewBag.Message))
+{
+    <div class="alert alert-success"> User has been Successfully added to group.
+    </div>
+}
+
 <form asp-action="AddGroupMember" method="post" role="form">
 
                 <div class="form-group">
@@ -30,5 +36,13 @@
                 
                 
                 
-            <button type="submit" class="btn btn-primary">Add to Group</button><br>
+            <button type="submit" class="btn btn-primary">Add to Group</button> <a class="btn btn-default btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="GroupDetails"
+
+                         asp-route-id="@Model.Id">
+                        Back to Group
+                </a><br>
         </form>
+        

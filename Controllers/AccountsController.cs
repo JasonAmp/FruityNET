@@ -292,6 +292,7 @@ namespace FruityNET.Controllers
                         RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null))
                     };
                     searchUserDTO.Users.Add(SearchResultDTO);
+
                 }
             }
             return View(searchUserDTO);

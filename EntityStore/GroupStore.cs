@@ -83,5 +83,10 @@ namespace FruityNET.EntityStore
         {
             return _Context.GroupOwner.FirstOrDefault(x => x.GroupId == GroupId);
         }
+
+        public GroupUser GetGroupMemberById(Guid Id)
+        {
+            return _Context.GroupUser.FirstOrDefault(x => x.Id == Id);
+        }
     }
 }
