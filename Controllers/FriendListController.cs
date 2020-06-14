@@ -83,7 +83,8 @@ namespace FruityNET.Controllers
             _notificationBox.SendNotifcation(Notification);
 
             _context.SaveChanges();
-            return RedirectToAction("Index", "Home");
+            ViewBag.Message = "Success";
+            return RedirectToAction("Search", "Accounts");
         }
 
         [HttpGet]
