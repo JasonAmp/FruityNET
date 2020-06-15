@@ -449,6 +449,16 @@ namespace FruityNET.Controllers
         {
             var existingAccount = _userStore.GetById(accountDTO.Id);
             _userStore.GrantAdmin(existingAccount);
+            var Notification = new Notification()
+            {
+                Message = "You have been granted Admin access ",
+                NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingAccount.UserId).Id,
+                RecieverUsername = _userStore.GetByIdentityUserId(existingAccount.UserId).Username
+            };
+
+
+            _notificationBox.SendNotifcation(Notification);
+            _context.SaveChanges();
             return RedirectToAction("AdminPortal");
         }
 
@@ -466,6 +476,15 @@ namespace FruityNET.Controllers
         {
             var existingAccount = _userStore.GetById(accountDTO.Id);
             existingAccount.UserType = UserType.User;
+            var Notification = new Notification()
+            {
+                Message = "Your Admin permissions have been Revoked ",
+                NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingAccount.UserId).Id,
+                RecieverUsername = _userStore.GetByIdentityUserId(existingAccount.UserId).Username
+            };
+
+
+            _notificationBox.SendNotifcation(Notification);
             _context.SaveChanges();
             return RedirectToAction("AdminPortal");
         }

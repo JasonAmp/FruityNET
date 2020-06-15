@@ -229,12 +229,13 @@ namespace FruityNET.Controllers
         [HttpPost]
         public IActionResult RemoveUser(GroupMemberDTO GroupMemberDTO)
         {
-            if (ModelState.IsValid)
-            {
+            var existingGroupMember = _GroupStore.GetGroupMemberById(GroupMemberDTO.Id);
+            var GroupID = new Guid(existingGroupMember.GroupId.ToString());
 
-                _GroupStore.DeleteGroupUser(_GroupStore.GetGroupMemberById(GroupMemberDTO.Id));
-            }
-            return RedirectToAction("Profile", "Accounts");
+
+            _GroupStore.DeleteGroupUser(existingGroupMember);
+            return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
+
 
         }
 

@@ -1,6 +1,8 @@
 @using FruityNET.DTOs
 @using Microsoft.AspNetCore.Identity
 @using FruityNET.Entities
+@using FruityNET.Enums
+
 
 
 
@@ -11,6 +13,7 @@
 }
 
 @inject UserManager<User> UserManager
+<h4>Timeline</h4><br>
 
  <a class="btn btn-primary btn-sm"
                         asp-action="Post">
@@ -39,7 +42,7 @@
 
       
 
-        @if(post.IdentityId == UserManager.GetUserId(User))
+        @if(post.IdentityId == UserManager.GetUserId(User) || Model.Permissions == UserType.Admin || Model.Permissions == UserType.SiteOwner)
         {
             <a class="btn btn-default btn-sm"
                         asp-action="Edit"

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using FruityNET.Entities;
+using FruityNET.Enums;
 
 namespace FruityNET.DTOs
 {
     public class PostViewDto
     {
-
+        public UserType Permissions { get; set; }
         public List<PostDTO> AllPosts { get; set; }
 
     }

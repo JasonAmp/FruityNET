@@ -22,12 +22,14 @@ namespace FruityNET.Controllers
         private readonly ICommentStore _commentStore;
         private readonly CurrentPostDTO _currentpost;
         private readonly IFriendsListStore _FriendListStore;
+        private readonly INotificationBox _notificationBox;
+
 
 
 
         public PostsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
         IUserStore _userStore, IPostStore _postStore, ICommentStore _commentStore, CurrentPostDTO _currentpost,
-        IFriendsListStore _FriendListStore)
+        IFriendsListStore _FriendListStore, INotificationBox _notificationBox)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -37,6 +39,7 @@ namespace FruityNET.Controllers
             this._commentStore = _commentStore;
             this._currentpost = _currentpost;
             this._FriendListStore = _FriendListStore;
+            this._notificationBox = _notificationBox;
         }
 
         [HttpGet]
@@ -62,8 +65,6 @@ namespace FruityNET.Controllers
 
             if (ModelState.IsValid)
             {
-
-
                 var Post = new Post
                 {
                     Content = addPostDTO.Content,
@@ -72,9 +73,7 @@ namespace FruityNET.Controllers
                 };
                 _postStore.AddPost(Post);
                 existingAccount.Posts.Add(Post);
-
                 return RedirectToAction("AllPosts");
-
             }
             return View(addPostDTO);
 
@@ -92,7 +91,11 @@ namespace FruityNET.Controllers
             var friendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
             friendList.Users = _FriendListStore.GetFriendsOfUser(friendList.Id);
 
-            var postViewDTO = new PostViewDto { AllPosts = new List<PostDTO>() };
+            var postViewDTO = new PostViewDto
+            {
+                Permissions = existingAccount.UserType,
+                AllPosts = new List<PostDTO>()
+            };
             foreach (var friend in friendList.Users)
             {
                 var AllPosts = _postStore.AllPostByUser(friend.UserId);
@@ -133,9 +136,8 @@ namespace FruityNET.Controllers
                 return RedirectToAction("Login", "Accounts");
 
             var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-
-
             var post = _postStore.ViewPost(Id);
+
             if (post is null)
                 return RedirectToAction("NotFound", "Accounts");
 
@@ -154,7 +156,8 @@ namespace FruityNET.Controllers
                     UserId = comment.UserId,
                     PostId = comment.PostId,
                     Content = comment.Content,
-                    Username = OwnerOfComment.Username
+                    Username = OwnerOfComment.Username,
+                    DatePosted = comment.DatePosted
                 };
                 ListOfComments.Add(CommentViewDTO);
             }
@@ -205,10 +208,24 @@ namespace FruityNET.Controllers
 
         public IActionResult Delete(Guid Id)
         {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
             var existingPost = _postStore.GetById(Id);
             if (existingPost is null)
                 return RedirectToAction("NotFound", "Accounts");
 
+            if (existingPost.UserId != CurrentUser.Id)
+            {
+                var Notification = new Notification()
+                {
+                    Message = $"Your post '{existingPost.Content}' was deleted," + " " + "It may have violated community guidlines.",
+                    NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
+                    RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
+                };
+
+
+                _notificationBox.SendNotifcation(Notification);
+                _context.SaveChanges();
+            }
             _postStore.DeletePost(existingPost);
             return RedirectToAction("AllPosts");
         }
@@ -224,15 +241,8 @@ namespace FruityNET.Controllers
 
             var existingPost = _postStore.ViewPost(Id);
             var addCommentDTO = new AddCommentDTO
-            {
-
-                UserId = CurrentUser.Id,
-
-            };
-
+            { UserId = CurrentUser.Id, };
             return View(addCommentDTO);
-
-
 
         }
 
@@ -251,31 +261,36 @@ namespace FruityNET.Controllers
                 if (existingPost is null)
                     return RedirectToAction("NotFound", "Accounts");
 
-
                 var comment = new Comment()
                 {
                     Content = addCommentDTO.Content,
                     PostId = _currentpost.Id,
-                    UserId = CurrentUser.Id
+                    UserId = CurrentUser.Id,
+                    DatePosted = DateTime.Now
                 };
 
                 existingPost.Comments.Add(comment);
-
                 _commentStore.AddComment(comment);
+                if (existingPost.UserId != CurrentUser.Id)
+                {
+                    var Notification = new Notification()
+                    {
+                        Message = $"{CurrentUser.UserName} Has Commented on your Post '{existingPost.Content}' ",
+                        NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
+                        RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
+                    };
 
 
+                    _notificationBox.SendNotifcation(Notification);
+                }
 
-                return RedirectToAction("AllPosts", "Posts");
-
+                _context.SaveChanges();
+                return RedirectToAction("ViewPost", "Posts", new { id = existingPost.Id });
             }
             else
             {
                 return View(addCommentDTO);
             }
-
-
-
-
         }
 
 
