@@ -101,6 +101,25 @@ namespace FruityNET.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AdminRequestor",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    UserId = table.Column<string>(nullable: true),
+                    Username = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AdminRequestor", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AdminRequestor_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
@@ -260,6 +279,29 @@ namespace FruityNET.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SiteOwner",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    FirstName = table.Column<string>(nullable: true),
+                    LastName = table.Column<string>(nullable: true),
+                    LastActive = table.Column<DateTime>(nullable: false),
+                    DateJoined = table.Column<DateTime>(nullable: false),
+                    UserType = table.Column<int>(nullable: false),
+                    UserId = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SiteOwner", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SiteOwner_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Group",
                 columns: table => new
                 {
@@ -355,6 +397,7 @@ namespace FruityNET.Migrations
                     Id = table.Column<Guid>(nullable: false),
                     Message = table.Column<string>(nullable: true),
                     NotificationBoxId = table.Column<Guid>(nullable: false),
+                    NotificationDate = table.Column<DateTime>(nullable: false),
                     RecieverUsername = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -374,7 +417,7 @@ namespace FruityNET.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     Pending = table.Column<bool>(nullable: false),
-                    UserResponse = table.Column<int>(nullable: false),
+                    RequestDate = table.Column<DateTime>(nullable: false),
                     RequestUserId = table.Column<Guid>(nullable: false),
                     Username = table.Column<string>(nullable: true),
                     FriendListId = table.Column<Guid>(nullable: false),
@@ -411,6 +454,24 @@ namespace FruityNET.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AdminApproval",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    SiteOwnerId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AdminApproval", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AdminApproval_SiteOwner_SiteOwnerId",
+                        column: x => x.SiteOwnerId,
+                        principalTable: "SiteOwner",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "GroupOwner",
                 columns: table => new
                 {
@@ -442,7 +503,7 @@ namespace FruityNET.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     Pending = table.Column<bool>(nullable: false),
-                    UserResponse = table.Column<int>(nullable: false),
+                    RequestDate = table.Column<DateTime>(nullable: false),
                     RequestUserId = table.Column<Guid>(nullable: false),
                     GroupId = table.Column<Guid>(nullable: false)
                 },
@@ -517,9 +578,57 @@ namespace FruityNET.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "AdminRequest",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Pending = table.Column<bool>(nullable: false),
+                    RequestDate = table.Column<DateTime>(nullable: false),
+                    AdminRequestorId = table.Column<Guid>(nullable: false),
+                    Username = table.Column<string>(nullable: true),
+                    ApprovalBoxId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AdminRequest", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AdminRequest_AdminRequestor_AdminRequestorId",
+                        column: x => x.AdminRequestorId,
+                        principalTable: "AdminRequestor",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AdminRequest_AdminApproval_ApprovalBoxId",
+                        column: x => x.ApprovalBoxId,
+                        principalTable: "AdminApproval",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Account_UserId",
                 table: "Account",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AdminApproval_SiteOwnerId",
+                table: "AdminApproval",
+                column: "SiteOwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AdminRequest_AdminRequestorId",
+                table: "AdminRequest",
+                column: "AdminRequestorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AdminRequest_ApprovalBoxId",
+                table: "AdminRequest",
+                column: "ApprovalBoxId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AdminRequestor_UserId",
+                table: "AdminRequestor",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -680,10 +789,18 @@ namespace FruityNET.Migrations
                 name: "IX_RequestUser_UserId",
                 table: "RequestUser",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SiteOwner_UserId",
+                table: "SiteOwner",
+                column: "UserId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AdminRequest");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -721,6 +838,12 @@ namespace FruityNET.Migrations
                 name: "Request");
 
             migrationBuilder.DropTable(
+                name: "AdminRequestor");
+
+            migrationBuilder.DropTable(
+                name: "AdminApproval");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -740,6 +863,9 @@ namespace FruityNET.Migrations
 
             migrationBuilder.DropTable(
                 name: "RequestUser");
+
+            migrationBuilder.DropTable(
+                name: "SiteOwner");
 
             migrationBuilder.DropTable(
                 name: "Account");

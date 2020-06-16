@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FruityNET.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20200610115725_new")]
+    [Migration("20200616132744_new")]
     partial class @new
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,6 +20,71 @@ namespace FruityNET.Migrations
                 .HasAnnotation("ProductVersion", "3.1.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("FruityNET.Entities.AdminApprovalBox", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SiteOwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteOwnerId");
+
+                    b.ToTable("AdminApproval");
+                });
+
+            modelBuilder.Entity("FruityNET.Entities.AdminRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AdminRequestorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ApprovalBoxId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Pending")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("RequestDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminRequestorId");
+
+                    b.HasIndex("ApprovalBoxId");
+
+                    b.ToTable("AdminRequest");
+                });
+
+            modelBuilder.Entity("FruityNET.Entities.AdminRequestor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AdminRequestor");
+                });
 
             modelBuilder.Entity("FruityNET.Entities.Comment", b =>
                 {
@@ -162,11 +227,11 @@ namespace FruityNET.Migrations
                     b.Property<bool>("Pending")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("RequestDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("RequestUserId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("UserResponse")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -235,6 +300,9 @@ namespace FruityNET.Migrations
                     b.Property<Guid>("NotificationBoxId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("NotificationDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("RecieverUsername")
                         .HasColumnType("nvarchar(max)");
 
@@ -300,6 +368,9 @@ namespace FruityNET.Migrations
                     b.Property<bool>("Pending")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("RequestDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("RequestUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -308,9 +379,6 @@ namespace FruityNET.Migrations
 
                     b.Property<Guid?>("UserAccountId1")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("UserResponse")
-                        .HasColumnType("int");
 
                     b.Property<string>("Username")
                         .HasColumnType("nvarchar(max)");
@@ -345,6 +413,37 @@ namespace FruityNET.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RequestUser");
+                });
+
+            modelBuilder.Entity("FruityNET.Entities.SiteOwner", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateJoined")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastActive")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("UserType")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SiteOwner");
                 });
 
             modelBuilder.Entity("FruityNET.Entities.UserAccount", b =>
@@ -614,6 +713,37 @@ namespace FruityNET.Migrations
                     b.HasDiscriminator().HasValue("User");
                 });
 
+            modelBuilder.Entity("FruityNET.Entities.AdminApprovalBox", b =>
+                {
+                    b.HasOne("FruityNET.Entities.SiteOwner", "SiteOwner")
+                        .WithMany()
+                        .HasForeignKey("SiteOwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FruityNET.Entities.AdminRequest", b =>
+                {
+                    b.HasOne("FruityNET.Entities.AdminRequestor", "AdminRequestor")
+                        .WithMany()
+                        .HasForeignKey("AdminRequestorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FruityNET.Entities.AdminApprovalBox", "ApprovalBox")
+                        .WithMany()
+                        .HasForeignKey("ApprovalBoxId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FruityNET.Entities.AdminRequestor", b =>
+                {
+                    b.HasOne("FruityNET.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+                });
+
             modelBuilder.Entity("FruityNET.Entities.Comment", b =>
                 {
                     b.HasOne("FruityNET.Entities.Post", "Post")
@@ -759,6 +889,13 @@ namespace FruityNET.Migrations
                 });
 
             modelBuilder.Entity("FruityNET.Entities.RequestUser", b =>
+                {
+                    b.HasOne("FruityNET.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+                });
+
+            modelBuilder.Entity("FruityNET.Entities.SiteOwner", b =>
                 {
                     b.HasOne("FruityNET.Entities.User", "User")
                         .WithMany()
