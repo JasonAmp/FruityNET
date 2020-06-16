@@ -35,7 +35,7 @@ namespace FruityNET
         {
 
             services.AddDbContextPool<ApplicationDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("default")));
+                options.UseSqlServer(Configuration.GetConnectionString("aws")));
             services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddScoped<IUserStore, UserStore>();
             services.AddScoped<IPostStore, PostStore>();
