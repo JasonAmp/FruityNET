@@ -29,12 +29,9 @@ namespace FruityNET.Data
         public DbSet<UserAccount> Account { get; set; }
         public DbSet<NotificationBox> NotificationBox { get; set; }
         public DbSet<Notification> Notification { get; set; }
-
-
-
-
-
-
-
+        public DbSet<AdminApprovalBox> AdminApproval { get; set; }
+        public DbSet<SiteOwner> SiteOwner { get; set; }
+        public DbSet<AdminRequest> AdminRequest { get; set; }
+        public DbSet<AdminRequestor> AdminRequestor { get; set; }
     }
 }
