@@ -13,6 +13,8 @@ namespace FruityNET.Entities
 
         public Guid NotificationBoxId { get; set; }
 
+        public DateTime NotificationDate { get; set; }
+
         [ForeignKey("NotificationBoxId")]
         public NotificationBox NotificationBox { get; set; }
         public string RecieverUsername { get; set; }

@@ -8,15 +8,12 @@ namespace FruityNET.Entities
     {
         [Key]
         public Guid Id { get; set; }
-
         public string Content { get; set; }
-
         public DateTime DatePosted { get; set; } = DateTime.UtcNow;
         public Guid PostId { get; set; }
 
         [ForeignKey("PostId")]
         public Post Post { get; set; }
-
         public string UserId { get; set; }
 
         [ForeignKey("UserId")]

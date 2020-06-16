@@ -114,7 +114,6 @@ namespace FruityNET.Controllers
                     RequestUserId = Request.RequestUserId,
                     FriendListId = Request.FriendListId,
                     Pending = Request.Pending,
-                    UserResponse = Request.UserResponse,
                     Username = RequestUser.Username
                 });
             }
@@ -130,7 +129,6 @@ namespace FruityNET.Controllers
                     RequestUserId = Request.RequestUserId,
                     FriendListId = Request.FriendListId,
                     Pending = Request.Pending,
-                    UserResponse = Request.UserResponse,
                     Username = Invitee.Username
                 });
             }

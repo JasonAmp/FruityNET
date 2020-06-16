@@ -11,8 +11,7 @@ namespace FruityNET.Entities
         public Guid Id { get; set; }
 
         public bool Pending { get; set; }
-
-        public Response UserResponse { get; set; }
+        public DateTime RequestDate { get; set; }
 
         public Guid RequestUserId { get; set; }
 
