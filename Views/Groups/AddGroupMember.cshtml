@@ -21,13 +21,14 @@
     </div>
 }<br>
 <br/>
-&nbsp;<h4>Add Group Member</h4><br>
+<h4 style="text-align: center;">Add Group Member</h4><br>
+    <div class="jumbotron">
 
-<form asp-action="AddGroupMember" method="post" role="form">
+<form style="text-align: center;" asp-action="AddGroupMember" method="post" role="form">
 
-               &nbsp; <div class="form-group">
+               <div class="form-group">
                     
-                    <label asp-for="Username">&nbsp;Username
+                    <label asp-for="Username">Username
                     </label>
                      <input  asp-for="Username" type="text"></input>
                     <span asp-validation-for="Username" class="text-danger"></span>
@@ -38,7 +39,7 @@
                 
                 
                 
-            &nbsp;<button type="submit" class="btn btn-primary">Add to Group</button> <a class="btn btn-default btn-sm"
+            <button type="submit" class="btn btn-primary">Add to Group</button> <a class="btn btn-default btn-sm"
                         asp-controller="Groups"
 
                         asp-action="GroupDetails"
@@ -46,5 +47,5 @@
                          asp-route-id="@Model.Id">
                         Back to Group
                 </a><br>
-        </form>
+        </form></div>
         

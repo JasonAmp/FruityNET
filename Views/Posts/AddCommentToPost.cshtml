@@ -8,7 +8,11 @@
     ViewData["Title"] = "Post Comment";
 }
 
-
+ <a class="btn btn-default btn-sm"
+                        asp-route-id=@Model.PostId
+                        asp-action="ViewPost">
+                        Back
+                </a><br><br>
 
 
 <form asp-action="AddCommentToPost" method="post" role="form">
