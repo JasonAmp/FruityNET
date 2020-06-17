@@ -20571,6 +20571,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/ServerError.cshtml",
+      "TargetPath": "Views\\Accounts\\ServerError.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/Edit.cshtml",
       "TargetPath": "Views\\Accounts\\Edit.cshtml",
       "FileKind": "mvc"
@@ -20593,6 +20598,11 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/FriendRequests.cshtml",
       "TargetPath": "Views\\FriendList\\FriendRequests.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/UserProfile.cshtml",
+      "TargetPath": "Views\\Accounts\\UserProfile.cshtml",
       "FileKind": "mvc"
     },
     {
@@ -20623,11 +20633,6 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Home/Index.cshtml",
       "TargetPath": "Views\\Home\\Index.cshtml",
-      "FileKind": "mvc"
-    },
-    {
-      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/ViewProfileOfUser.cshtml",
-      "TargetPath": "Views\\Accounts\\ViewProfileOfUser.cshtml",
       "FileKind": "mvc"
     },
     {

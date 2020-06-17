@@ -112,7 +112,6 @@
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Posts/AllPosts.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Posts/ViewPost.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Posts/AddCommentToPost.cshtml.g.cs
-/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Accounts/ViewProfileOfUser.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/Index.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/FriendRequests.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/SendFriendInvite.cshtml.g.cs
@@ -132,3 +131,5 @@
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Accounts/NotAuthorized.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Accounts/GrantAdminAccess.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Accounts/RevokeAdminAccess.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Accounts/ServerError.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Accounts/UserProfile.cshtml.g.cs
