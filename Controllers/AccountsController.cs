@@ -6,13 +6,14 @@ using FruityNET.Data;
 using FruityNET.DTOs;
 using FruityNET.Entities;
 using FruityNET.Enums;
+using FruityNET.Exceptions;
 using FruityNET.IEntityStore;
 using FruityNET.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using FruityNET.ParameterStrings;
 
 namespace FruityNET.Controllers
 {
@@ -27,15 +28,11 @@ namespace FruityNET.Controllers
         private readonly IRequestStore _RequestStore;
         private readonly INotificationBox _notificationBox;
         private readonly IGroupStore GroupStore;
-
-
-
-
-
+        private readonly ILogger<AccountsController> _logger;
 
         public AccountsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
         IUserStore _userStore, IFriendsListStore _FriendListStore, IRequestStore _RequestStore, INotificationBox _notificationBox,
-        IGroupStore GroupStore)
+        IGroupStore GroupStore, ILogger<AccountsController> _logger)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -45,41 +42,66 @@ namespace FruityNET.Controllers
             this._RequestStore = _RequestStore;
             this._notificationBox = _notificationBox;
             this.GroupStore = GroupStore;
+            this._logger = _logger;
         }
 
         [HttpGet]
         public IActionResult AdminPortal()
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction("Login", "Accounts");
-            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-            if (existingAccount.UserType != UserType.Admin && existingAccount.UserType != UserType.SiteOwner)
-                return RedirectToAction("NotAuthorized");
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
 
-            var AdminPortalDTO = new AdminPortalViewDTO()
-            {
-                UserId = CurrentUser.Id,
-                Accounts = new List<AccountDTO>()
-            };
-            var AllAccounts = _userStore.GetAccounts().FindAll(x => x.UserId != CurrentUser.Id);
-            foreach (var user in AllAccounts)
-            {
-                var AccountDTO = new AccountDTO()
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+
+                if (existingAccount.UserType != UserType.Admin && existingAccount.UserType != UserType.SiteOwner)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+
+                var AdminPortalDTO = new AdminPortalViewDTO()
                 {
-                    Id = user.Id,
-                    UserId = user.UserId,
-                    Username = user.Username,
-                    UserType = user.UserType,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    LastActive = user.LastActive,
-                    DateJoined = user.DateJoined,
-                    Email = user.Email
+                    UserId = CurrentUser.Id,
+                    Accounts = new List<AccountDTO>()
                 };
-                AdminPortalDTO.Accounts.Add(AccountDTO);
+                var AllAccounts = _userStore.GetAccounts().FindAll(x => x.UserId != CurrentUser.Id);
+                foreach (var user in AllAccounts)
+                {
+                    var AccountDTO = new AccountDTO()
+                    {
+                        Id = user.Id,
+                        UserId = user.UserId,
+                        Username = user.Username,
+                        UserType = user.UserType,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        LastActive = user.LastActive,
+                        DateJoined = user.DateJoined,
+                        Email = user.Email
+                    };
+                    AdminPortalDTO.Accounts.Add(AccountDTO);
+                }
+                return View(AdminPortalDTO);
             }
-            return View(AdminPortalDTO);
+
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("NotAuthorized");
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("Login", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError");
+            }
+
+
 
         }
 
@@ -108,21 +130,36 @@ namespace FruityNET.Controllers
 
             if (ModelState.IsValid)
             {
-
-                var result = await signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
-
-                if (result.Succeeded)
+                try
                 {
+                    var result = await signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
 
-                    var existingAccount = _userStore.GetByUsername(model.UserName);
-                    existingAccount.LastActive = DateTime.Now;
-                    _context.SaveChanges();
-                    return RedirectToAction("Index", "Home");
+                    if (result.Succeeded)
+                    {
+                        var existingAccount = _userStore.GetByUsername(model.UserName);
+                        existingAccount.LastActive = DateTime.Now;
+                        _context.SaveChanges();
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        throw new DomainException(ErrorMessages.InvalidLogin);
+                    }
+                }
+                catch (DomainException ex)
+                {
+                    _logger.LogError(ex.Message);
+                    ModelState.AddModelError("Error", ex.Message);
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.Message);
+                    return RedirectToAction("ServerError");
                 }
 
-
             }
-            ModelState.AddModelError("Error", "Invalid Login Attempt");
+            ModelState.AddModelError("Error", ErrorMessages.InvalidLogin);
             return View(model);
 
         }
@@ -144,51 +181,55 @@ namespace FruityNET.Controllers
             if (ModelState.IsValid)
             {
 
-
-                var user = new User
+                try
                 {
-                    UserName = model.UserName,
-                    Email = model.Email,
-                    UserType = UserType.User
-                };
+                    var user = new User
+                    {
+                        UserName = model.UserName,
+                        Email = model.Email,
+                        UserType = UserType.User
+                    };
 
-                var result = await userManager.CreateAsync(user, model.Password);
-                var userAccount = new UserAccount
-                {
-                    Username = model.UserName,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    Email = model.Email,
-                    UserType = UserType.User,
-                    UserId = user.Id.ToString(),
-                    DateJoined = DateTime.Now,
-                    LastActive = DateTime.Now,
-                    FriendList = new List<FriendUser>(),
-                    IncomingRequests = new List<Request>(),
-                    OutgoingRequests = new List<Request>(),
-                };
+                    var result = await userManager.CreateAsync(user, model.Password);
+                    var userAccount = new UserAccount
+                    {
+                        Username = model.UserName,
+                        FirstName = model.FirstName,
+                        LastName = model.LastName,
+                        Email = model.Email,
+                        UserType = UserType.User,
+                        UserId = user.Id.ToString(),
+                        DateJoined = DateTime.Now,
+                        LastActive = DateTime.Now,
+                        FriendList = new List<FriendUser>(),
+                        IncomingRequests = new List<Request>(),
+                        OutgoingRequests = new List<Request>(),
+                    };
 
-                var UserFriendList = _FriendListStore.CreateFriendList(new FriendList() { UserId = user.Id });
-                var NotificationBox = _notificationBox.CreateNotificationBox(new NotificationBox() { UserId = user.Id });
-                userAccount.FriendList = UserFriendList.Users;
-                CreateAccount(userAccount);
+                    var UserFriendList = _FriendListStore.CreateFriendList(new FriendList() { UserId = user.Id });
+                    var NotificationBox = _notificationBox.CreateNotificationBox(new NotificationBox() { UserId = user.Id });
+                    userAccount.FriendList = UserFriendList.Users;
+                    CreateAccount(userAccount);
 
 
-                if (result.Succeeded)
-                {
-                    await signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
+                    if (result.Succeeded)
+                    {
+                        await signInManager.SignInAsync(user, isPersistent: false);
+                        return RedirectToAction("Index", "Home");
+                    }
+
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error.Description);
+                    }
                 }
-
-                foreach (var error in result.Errors)
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError("", error.Description);
+                    _logger.LogError(ex.Message);
+                    return RedirectToAction("ServerError");
                 }
-
-
             }
             return View(model);
-
         }
 
         public UserAccount CreateAccount(UserAccount userAccount)
@@ -201,8 +242,16 @@ namespace FruityNET.Controllers
 
         public IActionResult SignOut()
         {
-            signInManager.SignOutAsync();
-            return RedirectToAction("Login", "Accounts");
+            try
+            {
+                signInManager.SignOutAsync();
+                return RedirectToAction("Login", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError");
+            }
         }
 
 
@@ -210,87 +259,121 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult Profile()
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (_currentUser is null)
+            try
             {
+                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (_currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
+                var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
+                var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
+
+                var ProfileViewModel = new ProfileViewModel()
+                {
+                    FirstName = existingAccount.FirstName,
+                    LastName = existingAccount.LastName,
+                    Location = existingAccount.Location,
+                    Email = existingAccount.Email,
+                    Username = existingAccount.Username,
+                    Occupation = existingAccount.Occupation,
+                    LastActive = existingAccount.LastActive,
+                    JoinDate = existingAccount.DateJoined,
+                    UserType = existingAccount.UserType,
+                    Groups = GroupStore.GetAllGroupsByUser(existingAccount.UserId)
+                };
+                foreach (var friend in FriendUsers)
+                {
+                    var account = _userStore.GetByUsername(friend.Username);
+                    var FriendDTO = new FriendDTO()
+                    {
+                        Id = friend.Id,
+                        UserId = friend.UserId,
+                        Username = friend.Username,
+                        AccountId = account.Id
+                    };
+                    ProfileViewModel.Friends.Add(FriendDTO);
+                }
+                return View(ProfileViewModel);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
                 return RedirectToAction("Login", "Accounts");
             }
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-
-            var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
-            var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
-
-            var ProfileViewModel = new ProfileViewModel()
+            catch (Exception ex)
             {
-                FirstName = existingAccount.FirstName,
-                LastName = existingAccount.LastName,
-                Location = existingAccount.Location,
-                Email = existingAccount.Email,
-                Username = existingAccount.Username,
-                Occupation = existingAccount.Occupation,
-                LastActive = existingAccount.LastActive,
-                JoinDate = existingAccount.DateJoined,
-                UserType = existingAccount.UserType,
-                Groups = GroupStore.GetAllGroupsByUser(existingAccount.UserId)
-            };
-            foreach (var friend in FriendUsers)
-            {
-                var account = _userStore.GetByUsername(friend.Username);
-                var FriendDTO = new FriendDTO()
-                {
-                    Id = friend.Id,
-                    UserId = friend.UserId,
-                    Username = friend.Username,
-                    AccountId = account.Id
-                };
-                ProfileViewModel.Friends.Add(FriendDTO);
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError");
             }
-            return View(ProfileViewModel);
+
         }
 
         public IActionResult Edit()
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (_currentUser is null)
-                return RedirectToAction("Login", "Accounts");
-
-
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-
-            return View(new EditProfileViewModel
+            try
             {
-                UserId = _currentUser.Id,
-                FirstName = existingAccount.FirstName,
-                LastName = existingAccount.LastName,
-                Location = existingAccount.Location,
-                Email = existingAccount.Email,
-                Username = existingAccount.Username,
-                Occupation = existingAccount.Occupation,
-            });
+                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (_currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
+
+                return View(new EditProfileViewModel
+                {
+                    UserId = _currentUser.Id,
+                    FirstName = existingAccount.FirstName,
+                    LastName = existingAccount.LastName,
+                    Location = existingAccount.Location,
+                    Email = existingAccount.Email,
+                    Username = existingAccount.Username,
+                    Occupation = existingAccount.Occupation,
+                });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("Login", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError");
+            }
         }
 
         [HttpPost]
         public IActionResult Edit(EditProfileViewModel model)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            _currentUser.Email = model.Email;
-            _currentUser.UserName = model.Username;
-
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-            if (_currentUser is null)
+            try
             {
-                return RedirectToAction("Login", "Accounts");
+                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+                _currentUser.Email = model.Email;
+                _currentUser.UserName = model.Username;
+
+                var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
+                if (_currentUser is null)
+                {
+                    return RedirectToAction(StringValue.Login);
+                }
+                if (ModelState.IsValid)
+                {
+
+
+                    _userStore.Edit(existingAccount, model);
+
+                    return RedirectToAction(StringValue.Profile);
+
+                }
+                return View(model);
             }
-            if (ModelState.IsValid)
+            catch (Exception ex)
             {
-
-
-                _userStore.Edit(existingAccount, model);
-
-                return RedirectToAction("Profile", "Accounts");
-
+                _logger.LogError(ex.Message);
+                return RedirectToAction(StringValue.ServerError);
             }
-            return View(model);
+
+
 
         }
 
@@ -298,12 +381,22 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult Search()
         {
+            try
+            {
+                var currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
 
-            var currentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (currentUser is null)
-                return RedirectToAction("Login");
+                return View(new SearchUserDTO());
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(StringValue.Login);
+            }
 
-            return View(new SearchUserDTO());
+
+
         }
 
 
@@ -318,86 +411,114 @@ namespace FruityNET.Controllers
         [HttpPost]
         public IActionResult Search(SearchUserDTO searchUserDTO)
         {
-            if (String.IsNullOrEmpty(searchUserDTO.Username))
-                ModelState.AddModelError("Error", "Please provide a Username.");
-
-            if (ModelState.IsValid)
+            try
             {
-                var ResultUser = _userStore.GetByUsername(searchUserDTO.Username);
-                var currentUser = _context.Users.Find(userManager.GetUserId(User));
-                if (ResultUser is null)
-                    ModelState.AddModelError("Error", "User Does Not Exist.");
+                if (String.IsNullOrEmpty(searchUserDTO.Username))
+                    throw new DomainException(ErrorMessages.RequiredValuesNotProvided);
 
-                else
+                if (ModelState.IsValid)
                 {
+                    var ResultUser = _userStore.GetByUsername(searchUserDTO.Username);
+                    var currentUser = _context.Users.Find(userManager.GetUserId(User));
+                    if (ResultUser is null)
+                        throw new DomainException(ErrorMessages.UserDoesNotExist);
 
-                    var existingAccount = _userStore.GetByIdentityUserId(currentUser.Id);
-                    var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
-                    var ResultFriendList = _FriendListStore.GetFriendListOfUser(ResultUser.UserId);
-                    var areFriends = _FriendListStore.IsFriendsOfUser(FriendList.Id, ResultUser.UserId);
-                    var ResultRequests = _RequestStore.PendingRequest(ResultFriendList.Id);
-                    var CurrentUserRequests = _RequestStore.PendingRequest(FriendList.Id);
-                    var SentByCurrent = ResultRequests.FirstOrDefault(x => x.Username == currentUser.UserName);
-                    var SentByResult = CurrentUserRequests.FirstOrDefault(x => x.Username == ResultUser.Username);
-
-                    var SearchResultDTO = new SearchUserResultDTO
+                    else
                     {
-                        Id = ResultUser.Id,
-                        Firstname = ResultUser.FirstName,
-                        Lastname = ResultUser.LastName,
-                        Username = ResultUser.Username,
-                        UserType = ResultUser.UserType,
-                        UserId = ResultUser.UserId,
-                        isFriendsOfCurrentUser = (areFriends is true) ? true : false,
-                        ResultUserFriendListID = ResultFriendList.Id,
-                        RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null))
-                    };
-                    searchUserDTO.Users.Add(SearchResultDTO);
 
+                        var existingAccount = _userStore.GetByIdentityUserId(currentUser.Id);
+                        var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
+                        var ResultFriendList = _FriendListStore.GetFriendListOfUser(ResultUser.UserId);
+                        var areFriends = _FriendListStore.IsFriendsOfUser(FriendList.Id, ResultUser.UserId);
+                        var ResultRequests = _RequestStore.PendingRequest(ResultFriendList.Id);
+                        var CurrentUserRequests = _RequestStore.PendingRequest(FriendList.Id);
+                        var SentByCurrent = ResultRequests.FirstOrDefault(x => x.Username == currentUser.UserName);
+                        var SentByResult = CurrentUserRequests.FirstOrDefault(x => x.Username == ResultUser.Username);
+
+                        var SearchResultDTO = new SearchUserResultDTO
+                        {
+                            Id = ResultUser.Id,
+                            Firstname = ResultUser.FirstName,
+                            Lastname = ResultUser.LastName,
+                            Username = ResultUser.Username,
+                            UserType = ResultUser.UserType,
+                            UserId = ResultUser.UserId,
+                            isFriendsOfCurrentUser = (areFriends is true) ? true : false,
+                            ResultUserFriendListID = ResultFriendList.Id,
+                            RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null))
+                        };
+                        searchUserDTO.Users.Add(SearchResultDTO);
+
+                    }
                 }
+                return View(searchUserDTO);
             }
-            return View(searchUserDTO);
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("Error", ex.Message);
+                return View(searchUserDTO);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(StringValue.ServerError);
+            }
+
         }
 
 
         [HttpGet]
-        public IActionResult ViewProfileOfUser(Guid Id)
+        public IActionResult UserProfile(Guid Id)
         {
-            var existingAccount = _userStore.GetById(Id);
-            if (existingAccount is null)
-                return View("NotFound");
-
-            var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
-            var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
-
-            var ProfileViewModel = new ProfileViewModel
+            try
             {
-                FirstName = existingAccount.FirstName,
-                LastName = existingAccount.LastName,
-                Location = existingAccount.Location,
-                Email = existingAccount.Email,
-                Username = existingAccount.Username,
-                Occupation = existingAccount.Occupation,
-                UserType = existingAccount.UserType,
-                LastActive = existingAccount.LastActive,
-                JoinDate = existingAccount.DateJoined,
-                Groups = GroupStore.GetAllGroupsByUser(existingAccount.UserId)
-            };
-            foreach (var friend in FriendUsers)
-            {
-                var account = _userStore.GetByUsername(friend.Username);
-                var FriendDTO = new FriendDTO()
+                var existingAccount = _userStore.GetById(Id);
+                if (existingAccount is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
+                var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
+
+                var ProfileViewModel = new ProfileViewModel
                 {
-                    Id = friend.Id,
-                    UserId = friend.UserId,
-                    Username = friend.Username,
-                    AccountId = account.Id
+                    FirstName = existingAccount.FirstName,
+                    LastName = existingAccount.LastName,
+                    Location = existingAccount.Location,
+                    Email = existingAccount.Email,
+                    Username = existingAccount.Username,
+                    Occupation = existingAccount.Occupation,
+                    UserType = existingAccount.UserType,
+                    LastActive = existingAccount.LastActive,
+                    JoinDate = existingAccount.DateJoined,
+                    Groups = GroupStore.GetAllGroupsByUser(existingAccount.UserId)
                 };
-                ProfileViewModel.Friends.Add(FriendDTO);
+                foreach (var friend in FriendUsers)
+                {
+                    var account = _userStore.GetByUsername(friend.Username);
+                    var FriendDTO = new FriendDTO()
+                    {
+                        Id = friend.Id,
+                        UserId = friend.UserId,
+                        Username = friend.Username,
+                        AccountId = account.Id
+                    };
+                    ProfileViewModel.Friends.Add(FriendDTO);
+                }
+                return View(ProfileViewModel);
             }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return View(StringValue.NotFound);
 
-            return View(ProfileViewModel);
-
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(StringValue.ServerError);
+            }
 
 
         }
@@ -407,7 +528,7 @@ namespace FruityNET.Controllers
         {
             var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
             if (CurrentUser is null)
-                return RedirectToAction("Login");
+                return RedirectToAction(StringValue.Login);
             var NotificationsViewDTO = new NotificationsViewDTO() { };
             var Notifications = _notificationBox.GetUserNotifications(CurrentUser.UserName);
             foreach (var notification in Notifications)
@@ -427,10 +548,26 @@ namespace FruityNET.Controllers
         public IActionResult DeleteNotification(Guid Id)
         {
             var existingNotification = _notificationBox.GetNotificationById(Id);
-            if (existingNotification is null)
+            try
+            {
+                if (existingNotification is null)
+                    throw new DomainException();
+
+
+                _notificationBox.DeleteNotifcation(existingNotification);
+                return RedirectToAction("Notifications");
+            }
+            catch (DomainException ex)
+            {
                 return RedirectToAction("NotFound", "Accounts");
-            _notificationBox.DeleteNotifcation(existingNotification);
-            return RedirectToAction("Notifications");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError");
+            }
+
+
         }
 
 
@@ -487,6 +624,13 @@ namespace FruityNET.Controllers
             _notificationBox.SendNotifcation(Notification);
             _context.SaveChanges();
             return RedirectToAction("AdminPortal");
+        }
+
+        [HttpGet]
+        public IActionResult ServerError()
+        {
+
+            return View();
         }
     }
 

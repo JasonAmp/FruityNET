@@ -241,7 +241,10 @@ namespace FruityNET.Controllers
 
             var existingPost = _postStore.ViewPost(Id);
             var addCommentDTO = new AddCommentDTO
-            { UserId = CurrentUser.Id, };
+            {
+                UserId = CurrentUser.Id,
+                PostId = existingPost.Id
+            };
             return View(addCommentDTO);
 
         }

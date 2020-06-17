@@ -9,16 +9,12 @@ namespace FruityNET.Entities
     {
         [Key]
         public Guid Id { get; set; }
-
         public string Username { get; set; }
-
         public GroupUserType Type { get; set; }
-
         public Guid GroupId { get; set; }
 
         [ForeignKey("GroupId")]
         public Group Group { get; set; }
-
         public string UserId { get; set; }
 
         [ForeignKey("UserId")]
