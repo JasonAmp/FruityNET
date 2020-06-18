@@ -7,7 +7,8 @@
 @{
     ViewData["Title"] = "Admin Portal";
 }
-<h1>Manage Users</h1>
+<h1 style="text-align: center;">Manage Users</h1><br>
+
    <table class="table table-hover">
   <thead>
     <tr>
@@ -17,6 +18,9 @@
       <th scope="col">Email </th>
       <th scope="col">Last Active </th>
       <th scope="col"> Role</th>
+      <th scope="col"> </th>
+      <th scope="col"> </th>
+
     </tr>
   </thead>
   
@@ -30,15 +34,15 @@
       <td>@account.LastActive</td>
       <td>@account.UserType</td>
       <td>
-          @if(account.UserType != UserType.Admin && account.UserType != UserType.SiteOwner)
+          @if(account.UserType != UserType.Admin && account.UserType != UserType.SiteOwner && account.AccountStatus.Equals(Status.Active))
           {
-               <a class="btn btn-warning btn-sm"
+               <a class="btn btn-info btn-sm"
                         asp-action="GrantAdminAccess"
                         asp-route-id="@account.Id">
                         Grant Admin Acesss
                 </a>
           }
-          else if(account.UserType == UserType.Admin)
+          else if(account.UserType == UserType.Admin && account.AccountStatus.Equals(Status.Active))
           {
               <a class="btn btn-danger btn-sm"
                         asp-action="RevokeAdminAccess"
@@ -46,8 +50,29 @@
                         Revoke Admin Acesss
                 </a>
           } 
+          
          
       </td>
+      <td>
+          @if(account.AccountStatus == Status.Active && account.UserType != UserType.SiteOwner)
+          {
+               <a class="btn btn-danger btn-sm"
+                        asp-action="Suspend"
+                        asp-route-id="@account.Id">
+                        Suspend Account
+                </a>
+          }
+          else if(!account.AccountStatus.Equals(Status.Active))
+          {
+              <a class="btn btn-info btn-sm"
+                        asp-action="Activate"
+                        asp-route-id="@account.Id">
+                        Activate Account
+                </a>
+          } 
+         
+      </td>
+      
           </tbody>
 
       }

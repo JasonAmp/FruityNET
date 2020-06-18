@@ -12,14 +12,16 @@
     ViewData["Title"] = "Profile";
 }
 <br>
+
+<br>
+<h4 >Your Profile</h4><br>
 @if(Model.UserType == UserType.Admin || Model.UserType == UserType.SiteOwner) 
 {
-    <a  class="btn btn-primary btn-sm" asp-area="" asp-controller="Accounts" asp-action="AdminPortal">Admin Portal
+    <a  class="btn btn-primary btn-sm" asp-area="" asp-controller="Accounts" asp-action="AdminPortal" style="position: relative;"><i style="font-size:20px" class="fa">&#xf0ad;</i>
+Admin Portal
 </a><br>
 }
 <br>
-<h4>Your Profile</h4><br>
-
    
 <div class="card" style="width: 18rem;">
   <img class="card-img-top" src="~/css/default-profile.png" alt="Card image cap">

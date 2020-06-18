@@ -1,0 +1,24 @@
+@using FruityNET.DTOs
+@model ActivatetDTO
+
+
+@{
+    ViewData["Title"] = "Activate Account";
+}
+
+
+            <div class="alert alert-warning">Are you sure you want to activate this account?
+    </div>
+        <h1>Activate</h1>
+
+
+
+        <form asp-action="ConfirmActivate" method="post" asp-route-id="@Model.AccountID" role="form">
+
+
+                
+            <button type="submit" class="btn btn-success">Activate</button>  <a class="btn btn-default btn-sm"
+                        asp-action="AdminPortal">
+                        Cancel
+                </a><br>
+        </form>

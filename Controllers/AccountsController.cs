@@ -78,7 +78,8 @@ namespace FruityNET.Controllers
                         LastName = user.LastName,
                         LastActive = user.LastActive,
                         DateJoined = user.DateJoined,
-                        Email = user.Email
+                        Email = user.Email,
+                        AccountStatus = user.AccountStatus
                     };
                     AdminPortalDTO.Accounts.Add(AccountDTO);
                 }
@@ -132,11 +133,21 @@ namespace FruityNET.Controllers
             {
                 try
                 {
+                    var existingAccount = _userStore.GetByUsername(model.UserName);
+                    if (existingAccount.AccountStatus != Status.Active)
+                    {
+                        if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                            throw new DomainException(ErrorMessages.AccountSuspended);
+                        else
+                        {
+                            throw new DomainException(ErrorMessages.AccountInactive);
+                        }
+                    }
                     var result = await signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
 
                     if (result.Succeeded)
                     {
-                        var existingAccount = _userStore.GetByUsername(model.UserName);
+
                         existingAccount.LastActive = DateTime.Now;
                         _context.SaveChanges();
                         return RedirectToAction("Index", "Home");
@@ -204,6 +215,7 @@ namespace FruityNET.Controllers
                             FriendList = new List<FriendUser>(),
                             IncomingRequests = new List<Request>(),
                             OutgoingRequests = new List<Request>(),
+                            AccountStatus = Status.Inactive
                         };
 
                         var UserFriendList = _FriendListStore.CreateFriendList(new FriendList() { UserId = user.Id });
@@ -211,7 +223,7 @@ namespace FruityNET.Controllers
                         userAccount.FriendList = UserFriendList.Users;
                         CreateAccount(userAccount);
 
-                        await signInManager.SignInAsync(user, isPersistent: false);
+                        //await signInManager.SignInAsync(user, isPersistent: false);
                         return RedirectToAction("Index", "Home");
 
                     }
@@ -751,6 +763,127 @@ namespace FruityNET.Controllers
         {
             ViewBag.Message = StatusCodes.Status500InternalServerError.ToString();
             return View();
+        }
+
+
+        [HttpGet]
+        public IActionResult Activate(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var CurrentUserAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (CurrentUserAccount.UserType.Equals(UserType.User))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var existingAccount = _userStore.GetById(Id);
+                if (existingAccount is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                return View(new ActivatetDTO() { AccountID = Id });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.UserDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound);
+
+                return RedirectToAction(ActionName.Login);
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
+
+        }
+
+        [HttpPost]
+        public IActionResult ConfirmActivate(Guid Id)
+        {
+            try
+            {
+                var existingAccount = _userStore.GetById(Id);
+                existingAccount.AccountStatus = Status.Active;
+                _context.SaveChanges();
+                return RedirectToAction("AdminPortal");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
+
+
+        }
+
+
+        [HttpGet]
+        public IActionResult Suspend(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var CurrentUserAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (CurrentUserAccount.UserType.Equals(UserType.User))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var existingAccount = _userStore.GetById(Id);
+                if (existingAccount is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                return View(new ActivatetDTO() { AccountID = Id });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.UserDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound);
+
+                return RedirectToAction(ActionName.Login);
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
+
+
+        }
+
+        [HttpPost]
+        public IActionResult ConfirmSuspend(Guid Id)
+        {
+            try
+            {
+                var existingAccount = _userStore.GetById(Id);
+                existingAccount.AccountStatus = Status.Suspended;
+                _context.SaveChanges();
+                return RedirectToAction(ActionName.AdminPortal);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
+
+
         }
     }
 

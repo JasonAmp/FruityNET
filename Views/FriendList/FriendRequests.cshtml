@@ -8,7 +8,8 @@
     ViewData["Title"] = "Friend Requests";
 }
 
-<h2 style="text-align: center;">Friend Requests</h2><br><br><br>
+<h2 style="text-align: center;">Friend Requests</h2><br><br>
+    <div class="jumbotron">
 
 
 
@@ -18,10 +19,10 @@
 @foreach (var request in Model.IncomingRequests)
 {
     <div class="card">
-  <div class="card-body">
+  <div class="card-body" style="text-align: center;">
     <h4 class="card-title">
-      @if(@request.Pending is true){<p>Pending</p>}</h4>
-    <p class="card-text">@request.Username</p>
+      @if(@request.Pending is true){<p style="text-align: center;">Pending</p>}</h4>
+    <p class="card-text" style="text-align: center;">@request.Username</p>
     <a class="btn btn-success btn-sm"
                         asp-action="AcceptRequest"
                         asp-controller="FriendList"
@@ -47,8 +48,9 @@
     <div class="card">
   <div class="card-body">
     <h4 class="card-title">
-    <h6 class="card-text">@request.Username</h6>
-    <h7>Awaiting Response </h7>
+    <h6 class="card-text" style="text-align: center;">@request.Username</h6>
+    <h7 style="text-align: center;">Awaiting Response </h7>
     
   </div></div><br>
 }
+</div>
