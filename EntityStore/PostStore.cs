@@ -12,17 +12,11 @@ namespace FruityNET.EntityStore
     public class PostStore : IPostStore
     {
         private ApplicationDbContext _Context;
-        private IUserStore _userStore;
-
-        private readonly UserManager<User> userManager;
 
 
-
-        public PostStore(ApplicationDbContext _Context,
-        UserManager<User> userManager)
+        public PostStore(ApplicationDbContext _Context)
         {
             this._Context = _Context;
-            this.userManager = userManager;
         }
         public Post AddPost(Post post)
         {

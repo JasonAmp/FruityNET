@@ -57,6 +57,10 @@ namespace FruityNET.Controllers
         {
             try
             {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
                 var FriendList = _FriendListStore.GetFriendListById(Id);
                 if (FriendList is null)
                     throw new DomainException();
@@ -65,6 +69,10 @@ namespace FruityNET.Controllers
             }
             catch (DomainException ex)
             {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+
                 return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
             }
 
@@ -183,64 +191,72 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult AcceptRequest(Guid Id)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (_currentUser is null)
+
+
+            var currentUser = _context.Users.Find(userManager.GetUserId(User));
+            if (currentUser is null)
                 return RedirectToAction("Login", "Accounts");
-            var request = _RequestStore.GetRequestById(Id);
-            if (request is null)
-                return RedirectToAction("NotFound", "Accounts");
 
-            var requestUser = _RequestStore.GetRequestUserById(request.RequestUserId);
-
-
-
-            var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
-
-            var existingUser = _userStore.GetByUsername(requestUser.Username);
-
-            var FriendForCurrentUser = new FriendUser()
-            {
-                UserId = requestUser.UserId,
-                Username = requestUser.Username,
-                FriendListId = FriendList.Id
-            };
-            var FriendForOtherUser = new FriendUser()
-            {
-                UserId = _currentUser.Id,
-                Username = _currentUser.UserName,
-                FriendListId = _FriendListStore.GetFriendListOfUser(existingUser.UserId).Id
-            };
-            _FriendListStore.AddFriend(FriendForCurrentUser);
-            _FriendListStore.AddFriend(FriendForOtherUser);
-            FriendList.Requests.Remove(request);
-            _RequestStore.DeleteRequest(request);
-            _RequestStore.DeleteRequestUser(requestUser);
-
-            var Notification = new Notification()
-            {
-                Message = $"You and {existingUser.Username} are now friends.",
-                NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(_currentUser.Id).Id,
-                RecieverUsername = _userStore.GetByIdentityUserId(_currentUser.Id).Username
-            };
-
-            var NotificationForFriend = new Notification()
-            {
-                Message = $"You and {_currentUser.UserName} are now friends.",
-                NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(_currentUser.Id).Id,
-                RecieverUsername = _userStore.GetByIdentityUserId(existingUser.UserId).Username
-            };
-            _notificationBox.SendNotifcation(Notification);
-            _notificationBox.SendNotifcation(NotificationForFriend);
-            _context.SaveChanges();
-            return View(FriendForCurrentUser);
+            return View(new RequestDTO() { RequestID = Id });
         }
 
 
         [HttpPost]
-        public IActionResult AcceptRequest(FriendUser friend)
+        public IActionResult ConfirmRequest(Guid Id)
         {
+            try
+            {
+                var currentUser = _context.Users.Find(userManager.GetUserId(User));
+                var request = _RequestStore.GetRequestById(Id);
+                if (request is null)
+                    return RedirectToAction("NotFound", "Accounts");
 
-            return RedirectToAction("FriendRequests", "FriendList");
+                var requestUser = _RequestStore.GetRequestUserById(request.RequestUserId);
+                var currentUserFriendList = _FriendListStore.GetFriendListOfUser(currentUser.Id);
+                var requestUserAccount = _userStore.GetByUsername(requestUser.Username);
+                var RequestorFriendList = _FriendListStore.GetFriendListOfUser(requestUserAccount.UserId);
+                var CurrentUserNotificationBox = _notificationBox.GetNotificationBoxByUserId(currentUser.Id);
+                var OtherUserNotificationBox = _notificationBox.GetNotificationBoxByUserId(requestUser.UserId);
+
+                var FriendForCurrentUser = new FriendUser()
+                {
+
+                    UserId = requestUserAccount.UserId,
+                    Username = requestUserAccount.Username,
+                    FriendListId = currentUserFriendList.Id
+                };
+                var FriendForOtherUser = new FriendUser()
+                {
+                    UserId = currentUser.Id,
+                    Username = currentUser.UserName,
+                    FriendListId = RequestorFriendList.Id
+                };
+
+
+                SendNotifcations(new Notification()
+                {
+                    Message = $"You and {FriendForCurrentUser.Username} are now friends.",
+                    NotificationBoxId = CurrentUserNotificationBox.Id,
+                    RecieverUsername = currentUser.UserName
+                }, new Notification()
+                {
+                    Message = $"You and {FriendForOtherUser.Username} are now friends.",
+                    NotificationBoxId = OtherUserNotificationBox.Id,
+                    RecieverUsername = FriendForCurrentUser.Username
+                });
+
+                CreateNewFriends(FriendForCurrentUser, FriendForOtherUser);
+                _RequestStore.DeleteRequest(request);
+                _RequestStore.DeleteRequestUser(requestUser);
+                _context.SaveChanges();
+                return RedirectToAction("FriendRequests", "FriendList");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
 
         }
 
@@ -299,6 +315,18 @@ namespace FruityNET.Controllers
         {
             return RedirectToAction("Profile", "Accounts");
 
+        }
+
+        private protected void SendNotifcations(Notification Notification, Notification NotificationForFriend)
+        {
+            _notificationBox.SendNotifcation(Notification);
+            _notificationBox.SendNotifcation(NotificationForFriend);
+        }
+
+        private protected void CreateNewFriends(FriendUser FriendForCurrentUser, FriendUser FriendForOtherUser)
+        {
+            _FriendListStore.AddFriend(FriendForCurrentUser);
+            _FriendListStore.AddFriend(FriendForOtherUser);
         }
 
 

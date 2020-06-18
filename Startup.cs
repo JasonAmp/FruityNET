@@ -45,8 +45,6 @@ namespace FruityNET
             services.AddScoped<INotificationBox, NotificationBoxStore>();
             services.AddScoped<IGroupStore, GroupStore>();
             services.AddSingleton<CurrentPostDTO>();
-            services.AddSingleton<AcceptedRequestDTO>();
-            services.AddSingleton<RequestNotificationCount>();
             services.AddControllersWithViews();
             services.AddRazorPages();
         }

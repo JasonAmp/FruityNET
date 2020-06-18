@@ -20,13 +20,12 @@ namespace FruityNET.Controllers
         private readonly SignInManager<User> signInManager;
         private readonly ApplicationDbContext _context;
         private readonly IUserStore _userStore;
-        private readonly IFriendsListStore _FriendListStore;
         private readonly IGroupStore _GroupStore;
         private readonly ILogger<GroupsController> _logger;
 
 
         public GroupsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
-        IUserStore _userStore, IFriendsListStore _FriendListStore, IGroupStore _GroupStore, ILogger<GroupsController> _logger)
+        IUserStore _userStore, IGroupStore _GroupStore, ILogger<GroupsController> _logger)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
