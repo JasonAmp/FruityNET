@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using FruityNET.ParameterStrings;
 
 namespace FruityNET.Controllers
 {
@@ -23,13 +25,15 @@ namespace FruityNET.Controllers
         private readonly CurrentPostDTO _currentpost;
         private readonly IFriendsListStore _FriendListStore;
         private readonly INotificationBox _notificationBox;
+        private readonly ILogger<PostsController> _logger;
+
 
 
 
 
         public PostsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
         IUserStore _userStore, IPostStore _postStore, ICommentStore _commentStore, CurrentPostDTO _currentpost,
-        IFriendsListStore _FriendListStore, INotificationBox _notificationBox)
+        IFriendsListStore _FriendListStore, INotificationBox _notificationBox, ILogger<PostsController> _logger)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -40,42 +44,65 @@ namespace FruityNET.Controllers
             this._currentpost = _currentpost;
             this._FriendListStore = _FriendListStore;
             this._notificationBox = _notificationBox;
+            this._logger = _logger;
         }
 
         [HttpGet]
         public IActionResult Post()
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction("Login", "Accounts");
-            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-
-            return View(new AddPostDTO
+            try
             {
-                UserId = existingAccount.Id
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    return RedirectToAction("Login", "Accounts");
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
 
-            });
+                return View(new AddPostDTO
+                {
+                    UserId = existingAccount.Id
+
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+            }
+
+
         }
 
         [HttpPost]
         public IActionResult Post(AddPostDTO addPostDTO)
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-
-            if (ModelState.IsValid)
+            try
             {
-                var Post = new Post
-                {
-                    Content = addPostDTO.Content,
-                    UserId = CurrentUser.Id
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
 
-                };
-                _postStore.AddPost(Post);
-                existingAccount.Posts.Add(Post);
-                return RedirectToAction("AllPosts");
+                if (ModelState.IsValid)
+                {
+                    var Post = new Post
+                    {
+                        Content = addPostDTO.Content,
+                        UserId = CurrentUser.Id
+
+                    };
+                    _postStore.AddPost(Post);
+                    existingAccount.Posts.Add(Post);
+                    return RedirectToAction("AllPosts");
+                }
+                return View(addPostDTO);
             }
-            return View(addPostDTO);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+            }
+
+
 
         }
 
@@ -83,217 +110,290 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult AllPosts()
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction("Login", "Accounts");
-
-            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-            var friendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
-            friendList.Users = _FriendListStore.GetFriendsOfUser(friendList.Id);
-
-            var postViewDTO = new PostViewDto
+            try
             {
-                Permissions = existingAccount.UserType,
-                AllPosts = new List<PostDTO>()
-            };
-            foreach (var friend in friendList.Users)
-            {
-                var AllPosts = _postStore.AllPostByUser(friend.UserId);
-                foreach (var post in AllPosts)
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    return RedirectToAction("Login", "Accounts");
+
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                var friendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
+                friendList.Users = _FriendListStore.GetFriendsOfUser(friendList.Id);
+
+                var postViewDTO = new PostViewDto
+                {
+                    Permissions = existingAccount.UserType,
+                    AllPosts = new List<PostDTO>()
+                };
+                foreach (var friend in friendList.Users)
+                {
+                    var AllPosts = _postStore.AllPostByUser(friend.UserId);
+                    foreach (var post in AllPosts)
+                    {
+                        var PostDTO = new PostDTO
+                        {
+                            Id = post.Id,
+                            Content = post.Content,
+                            DatePosted = post.DatePosted,
+                            Username = friend.Username,
+                        };
+                        postViewDTO.AllPosts.Add(PostDTO);
+                    }
+                }
+
+                foreach (var post in _postStore.AllPostByCurrentUser(CurrentUser.Id))
                 {
                     var PostDTO = new PostDTO
                     {
                         Id = post.Id,
                         Content = post.Content,
                         DatePosted = post.DatePosted,
-                        Username = friend.Username,
+                        Username = existingAccount.Username,
+                        UserId = existingAccount.Id,
+                        IdentityId = CurrentUser.Id
                     };
                     postViewDTO.AllPosts.Add(PostDTO);
                 }
+                return View(postViewDTO);
             }
-
-            foreach (var post in _postStore.AllPostByCurrentUser(CurrentUser.Id))
+            catch (Exception ex)
             {
-                var PostDTO = new PostDTO
-                {
-                    Id = post.Id,
-                    Content = post.Content,
-                    DatePosted = post.DatePosted,
-                    Username = existingAccount.Username,
-                    UserId = existingAccount.Id,
-                    IdentityId = CurrentUser.Id
-                };
-                postViewDTO.AllPosts.Add(PostDTO);
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
             }
-            return View(postViewDTO);
         }
 
         [HttpGet]
         public IActionResult ViewPost(Guid Id)
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction("Login", "Accounts");
-
-            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-            var post = _postStore.ViewPost(Id);
-
-            if (post is null)
-                return RedirectToAction("NotFound", "Accounts");
-
-            var OwnerOfPost = _userStore.GetByIdentityUserId(post.UserId);
-
-            var comments = from x in _commentStore.GetAllComments()
-                           where x.PostId == post.Id
-                           orderby x.DatePosted
-                           select x;
-            var ListOfComments = new List<ViewCommentDTO>();
-            foreach (var comment in comments)
+            try
             {
-                var OwnerOfComment = _commentStore.GetOwnerOfComment(comment.UserId);
-                var CommentViewDTO = new ViewCommentDTO
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    return RedirectToAction("Login", "Accounts");
+
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                var post = _postStore.ViewPost(Id);
+
+                if (post is null)
+                    return RedirectToAction("NotFound", "Accounts");
+
+                var OwnerOfPost = _userStore.GetByIdentityUserId(post.UserId);
+
+                var comments = from x in _commentStore.GetAllComments()
+                               where x.PostId == post.Id
+                               orderby x.DatePosted
+                               select x;
+                var ListOfComments = new List<ViewCommentDTO>();
+                foreach (var comment in comments)
                 {
-                    UserId = comment.UserId,
-                    PostId = comment.PostId,
-                    Content = comment.Content,
-                    Username = OwnerOfComment.Username,
-                    DatePosted = comment.DatePosted
-                };
-                ListOfComments.Add(CommentViewDTO);
+                    var OwnerOfComment = _commentStore.GetOwnerOfComment(comment.UserId);
+                    var CommentViewDTO = new ViewCommentDTO
+                    {
+                        UserId = comment.UserId,
+                        PostId = comment.PostId,
+                        Content = comment.Content,
+                        Username = OwnerOfComment.Username,
+                        DatePosted = comment.DatePosted
+                    };
+                    ListOfComments.Add(CommentViewDTO);
+                }
+
+                return View(new PostViewDetaisDTO
+                {
+                    Username = OwnerOfPost.Username,
+                    content = post.Content,
+                    DatePosted = post.DatePosted,
+                    comments = ListOfComments
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
             }
 
-            return View(new PostViewDetaisDTO
-            {
-                Username = OwnerOfPost.Username,
-                content = post.Content,
-                DatePosted = post.DatePosted,
-                comments = ListOfComments
-            });
+
         }
 
         [HttpGet]
         public IActionResult Edit(Guid Id)
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction("Login", "Accounts");
-
-            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-
-            var existingPost = _postStore.GetById(Id);
-            if (existingPost is null)
-                return RedirectToAction("NotFound", "Accounts");
-
-
-            return View(new EditPostDTO()
+            try
             {
-                Id = existingPost.Id,
-                Content = existingPost.Content
-            });
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    return RedirectToAction("Login", "Accounts");
+
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+
+                var existingPost = _postStore.GetById(Id);
+                if (existingPost is null)
+                    return RedirectToAction("NotFound", "Accounts");
+
+
+                return View(new EditPostDTO()
+                {
+                    Id = existingPost.Id,
+                    Content = existingPost.Content
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
         }
 
         [HttpPost]
         public IActionResult Edit(EditPostDTO editPostDTO)
         {
-            var existingPost = _postStore.GetById(editPostDTO.Id);
-
-
-            if (ModelState.IsValid)
+            try
             {
-                _postStore.EditPost(editPostDTO, existingPost);
-                return RedirectToAction("AllPosts");
+                var existingPost = _postStore.GetById(editPostDTO.Id);
+
+
+                if (ModelState.IsValid)
+                {
+                    _postStore.EditPost(editPostDTO, existingPost);
+                    return RedirectToAction("AllPosts");
+                }
+                return View(editPostDTO);
             }
-            return View(editPostDTO);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
         }
 
         public IActionResult Delete(Guid Id)
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingPost = _postStore.GetById(Id);
-            if (existingPost is null)
-                return RedirectToAction("NotFound", "Accounts");
-
-            if (existingPost.UserId != CurrentUser.Id)
+            try
             {
-                var Notification = new Notification()
-                {
-                    Message = $"Your post '{existingPost.Content}' was deleted," + " " + "It may have violated community guidlines.",
-                    NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
-                    RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
-                };
-
-
-                _notificationBox.SendNotifcation(Notification);
-                _context.SaveChanges();
-            }
-            _postStore.DeletePost(existingPost);
-            return RedirectToAction("AllPosts");
-        }
-
-        [HttpGet]
-        public IActionResult AddCommentToPost(Guid Id)
-        {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction("Login", "Accounts");
-            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-            _currentpost.Id = Id;
-
-            var existingPost = _postStore.ViewPost(Id);
-            var addCommentDTO = new AddCommentDTO
-            {
-                UserId = CurrentUser.Id,
-                PostId = existingPost.Id
-            };
-            return View(addCommentDTO);
-
-        }
-
-        [HttpPost]
-        public IActionResult AddCommentToPost(AddCommentDTO addCommentDTO)
-        {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction("Login", "Accounts");
-            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-
-
-            if (ModelState.IsValid)
-            {
-                var existingPost = _postStore.ViewPost(_currentpost.Id);
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingPost = _postStore.GetById(Id);
                 if (existingPost is null)
                     return RedirectToAction("NotFound", "Accounts");
 
-                var comment = new Comment()
-                {
-                    Content = addCommentDTO.Content,
-                    PostId = _currentpost.Id,
-                    UserId = CurrentUser.Id,
-                    DatePosted = DateTime.Now
-                };
-
-                existingPost.Comments.Add(comment);
-                _commentStore.AddComment(comment);
                 if (existingPost.UserId != CurrentUser.Id)
                 {
                     var Notification = new Notification()
                     {
-                        Message = $"{CurrentUser.UserName} Has Commented on your Post '{existingPost.Content}' ",
+                        Message = $"Your post '{existingPost.Content}' was deleted," + " " + "It may have violated community guidlines.",
                         NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
                         RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
                     };
 
 
                     _notificationBox.SendNotifcation(Notification);
+                    _context.SaveChanges();
                 }
-
-                _context.SaveChanges();
-                return RedirectToAction("ViewPost", "Posts", new { id = existingPost.Id });
+                _postStore.DeletePost(existingPost);
+                return RedirectToAction("AllPosts");
             }
-            else
+            catch (Exception ex)
             {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+            }
+
+
+        }
+
+        [HttpGet]
+        public IActionResult AddCommentToPost(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    return RedirectToAction("Login", "Accounts");
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                _currentpost.Id = Id;
+
+                var existingPost = _postStore.ViewPost(Id);
+                var addCommentDTO = new AddCommentDTO
+                {
+                    UserId = CurrentUser.Id,
+                    PostId = existingPost.Id
+                };
                 return View(addCommentDTO);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+            }
+
+
+
+        }
+
+        [HttpPost]
+        public IActionResult AddCommentToPost(AddCommentDTO addCommentDTO)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    return RedirectToAction("Login", "Accounts");
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+
+
+                if (ModelState.IsValid)
+                {
+                    var existingPost = _postStore.ViewPost(_currentpost.Id);
+                    if (existingPost is null)
+                        return RedirectToAction("NotFound", "Accounts");
+
+                    var comment = new Comment()
+                    {
+                        Content = addCommentDTO.Content,
+                        PostId = _currentpost.Id,
+                        UserId = CurrentUser.Id,
+                        DatePosted = DateTime.Now
+                    };
+
+                    existingPost.Comments.Add(comment);
+                    _commentStore.AddComment(comment);
+                    if (existingPost.UserId != CurrentUser.Id)
+                    {
+                        var Notification = new Notification()
+                        {
+                            Message = $"{CurrentUser.UserName} Has Commented on your Post '{existingPost.Content}' ",
+                            NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
+                            RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
+                        };
+
+
+                        _notificationBox.SendNotifcation(Notification);
+                    }
+
+                    _context.SaveChanges();
+                    return RedirectToAction("ViewPost", "Posts", new { id = existingPost.Id });
+                }
+                else
+                {
+                    return View(addCommentDTO);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+            }
+
+
         }
 
 

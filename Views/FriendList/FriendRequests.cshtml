@@ -8,13 +8,13 @@
     ViewData["Title"] = "Friend Requests";
 }
 
-<h3>Friend Requests</h3><br><br><br>
+<h2 style="text-align: center;">Friend Requests</h2><br><br><br>
 
 
 
-<h6>Incoming Requests</h6>
+<h6 style="text-align: center;">Incoming Requests</h6>
 @if(Model.IncomingRequests.Count is 0)
-{<p>No Incoming Requests</p>}
+{<p style="text-align: center;">No Incoming Requests</p>}
 @foreach (var request in Model.IncomingRequests)
 {
     <div class="card">
@@ -39,9 +39,9 @@
 }
 <br>
 <br><br><br>
-<h6>Sent Requests</h6>
+<h6 style="text-align: center;" >Sent Requests</h6>
 @if(Model.OutgoingRequests.Count is 0)
-{<p>No Requests Sent</p>}
+{<p style="text-align: center;">No Requests Sent</p>}
 @foreach (var request in Model.OutgoingRequests)
 {
     <div class="card">
