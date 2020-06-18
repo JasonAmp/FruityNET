@@ -16,6 +16,7 @@ namespace FruityNET.Entities
         public string LastName { get; set; }
         public string Location { get; set; }
         public string Occupation { get; set; }
+        public Status AccountStatus { get; set; }
         public DateTime LastActive { get; set; }
         public DateTime DateJoined { get; set; } = DateTime.Now;
         public UserType UserType { get; set; }

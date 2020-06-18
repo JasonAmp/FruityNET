@@ -192,12 +192,27 @@ namespace FruityNET.Controllers
         public IActionResult AcceptRequest(Guid Id)
         {
 
+            try
+            {
+                var currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
 
-            var currentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (currentUser is null)
+
+                return View(new RequestDTO() { RequestID = Id });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
                 return RedirectToAction("Login", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
 
-            return View(new RequestDTO() { RequestID = Id });
+
         }
 
 
@@ -220,7 +235,6 @@ namespace FruityNET.Controllers
 
                 var FriendForCurrentUser = new FriendUser()
                 {
-
                     UserId = requestUserAccount.UserId,
                     Username = requestUserAccount.Username,
                     FriendListId = currentUserFriendList.Id
@@ -233,19 +247,10 @@ namespace FruityNET.Controllers
                 };
 
 
-                SendNotifcations(new Notification()
-                {
-                    Message = $"You and {FriendForCurrentUser.Username} are now friends.",
-                    NotificationBoxId = CurrentUserNotificationBox.Id,
-                    RecieverUsername = currentUser.UserName
-                }, new Notification()
-                {
-                    Message = $"You and {FriendForOtherUser.Username} are now friends.",
-                    NotificationBoxId = OtherUserNotificationBox.Id,
-                    RecieverUsername = FriendForCurrentUser.Username
-                });
-
+                SendNotifcations(CurrentUserNotificationBox.Id, OtherUserNotificationBox.Id,
+                FriendForCurrentUser.Username, FriendForOtherUser.Username);
                 CreateNewFriends(FriendForCurrentUser, FriendForOtherUser);
+
                 _RequestStore.DeleteRequest(request);
                 _RequestStore.DeleteRequestUser(requestUser);
                 _context.SaveChanges();
@@ -317,10 +322,21 @@ namespace FruityNET.Controllers
 
         }
 
-        private protected void SendNotifcations(Notification Notification, Notification NotificationForFriend)
+        private protected void SendNotifcations(Guid CurrentUserNotificationBoxID, Guid OtherUserNotificationBoxID,
+                string FriendForCurrentUserUsername, string FriendForOtherUserUsername)
         {
-            _notificationBox.SendNotifcation(Notification);
-            _notificationBox.SendNotifcation(NotificationForFriend);
+            _notificationBox.SendNotifcation(new Notification()
+            {
+                Message = $"You and {FriendForCurrentUserUsername} are now friends.",
+                NotificationBoxId = CurrentUserNotificationBoxID,
+                RecieverUsername = FriendForOtherUserUsername
+            });
+            _notificationBox.SendNotifcation(new Notification()
+            {
+                Message = $"You and {FriendForOtherUserUsername} are now friends.",
+                NotificationBoxId = OtherUserNotificationBoxID,
+                RecieverUsername = FriendForCurrentUserUsername
+            });
         }
 
         private protected void CreateNewFriends(FriendUser FriendForCurrentUser, FriendUser FriendForOtherUser)

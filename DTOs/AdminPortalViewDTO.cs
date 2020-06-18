@@ -23,6 +23,7 @@ namespace FruityNET.DTOs
         public DateTime DateJoined { get; set; }
         public UserType UserType { get; set; }
         public string UserId { get; set; }
+        public Status AccountStatus { get; set; }
 
     }
 }
