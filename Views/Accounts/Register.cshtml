@@ -3,6 +3,18 @@
 @{
     ViewData["Title"] = "Register";
 }
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState["Error"].Errors.Count > 0)
+{
+    <div class="alert alert-danger">
+        
+             @foreach (var error in ViewData.ModelState["Error"].Errors)
+             {
+               <p>@error.ErrorMessage</p>
+             }
+        
+       
+    </div>
+}
 
                 <br>
                 <h3 >Sign Up</h3><br>

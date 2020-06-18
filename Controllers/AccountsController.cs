@@ -177,11 +177,9 @@ namespace FruityNET.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-
-            if (ModelState.IsValid)
+            try
             {
-
-                try
+                if (ModelState.IsValid)
                 {
                     var user = new User
                     {
@@ -191,45 +189,57 @@ namespace FruityNET.Controllers
                     };
 
                     var result = await userManager.CreateAsync(user, model.Password);
-                    var userAccount = new UserAccount
-                    {
-                        Username = model.UserName,
-                        FirstName = model.FirstName,
-                        LastName = model.LastName,
-                        Email = model.Email,
-                        UserType = UserType.User,
-                        UserId = user.Id.ToString(),
-                        DateJoined = DateTime.Now,
-                        LastActive = DateTime.Now,
-                        FriendList = new List<FriendUser>(),
-                        IncomingRequests = new List<Request>(),
-                        OutgoingRequests = new List<Request>(),
-                    };
-
-                    var UserFriendList = _FriendListStore.CreateFriendList(new FriendList() { UserId = user.Id });
-                    var NotificationBox = _notificationBox.CreateNotificationBox(new NotificationBox() { UserId = user.Id });
-                    userAccount.FriendList = UserFriendList.Users;
-                    CreateAccount(userAccount);
-
-
                     if (result.Succeeded)
                     {
+                        var userAccount = new UserAccount
+                        {
+                            Username = model.UserName,
+                            FirstName = model.FirstName,
+                            LastName = model.LastName,
+                            Email = model.Email,
+                            UserType = UserType.User,
+                            UserId = user.Id.ToString(),
+                            DateJoined = DateTime.Now,
+                            LastActive = DateTime.Now,
+                            FriendList = new List<FriendUser>(),
+                            IncomingRequests = new List<Request>(),
+                            OutgoingRequests = new List<Request>(),
+                        };
+
+                        var UserFriendList = _FriendListStore.CreateFriendList(new FriendList() { UserId = user.Id });
+                        var NotificationBox = _notificationBox.CreateNotificationBox(new NotificationBox() { UserId = user.Id });
+                        userAccount.FriendList = UserFriendList.Users;
+                        CreateAccount(userAccount);
+
                         await signInManager.SignInAsync(user, isPersistent: false);
                         return RedirectToAction("Index", "Home");
+
                     }
 
                     foreach (var error in result.Errors)
                     {
-                        ModelState.AddModelError("", error.Description);
+                        ModelState.AddModelError("Error", error.Description);
+                        _logger.LogError(error.Description);
                     }
                 }
-                catch (Exception ex)
+                if (model.Password != model.ConfirmPassword)
                 {
-                    _logger.LogError(ex.Message);
-                    return RedirectToAction("ServerError");
+                    _logger.LogError("Password confirmation failed");
+                    ModelState.AddModelError("Error", "Password confirmation failed");
                 }
+                else
+                {
+                    ModelState.AddModelError("Error", ErrorMessages.RequiredValuesNotProvided);
+                }
+                return View(model);
+
             }
-            return View(model);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError");
+            }
+
         }
 
         public UserAccount CreateAccount(UserAccount userAccount)
@@ -354,7 +364,7 @@ namespace FruityNET.Controllers
                 var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
                 if (_currentUser is null)
                 {
-                    return RedirectToAction(StringValue.Login);
+                    return RedirectToAction(ActionName.Login);
                 }
                 if (ModelState.IsValid)
                 {
@@ -362,7 +372,7 @@ namespace FruityNET.Controllers
 
                     _userStore.Edit(existingAccount, model);
 
-                    return RedirectToAction(StringValue.Profile);
+                    return RedirectToAction(ActionName.Profile);
 
                 }
                 return View(model);
@@ -370,7 +380,7 @@ namespace FruityNET.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return RedirectToAction(StringValue.ServerError);
+                return RedirectToAction(ActionName.ServerError);
             }
 
 
@@ -392,7 +402,7 @@ namespace FruityNET.Controllers
             catch (DomainException ex)
             {
                 _logger.LogError(ex.Message);
-                return RedirectToAction(StringValue.Login);
+                return RedirectToAction(ActionName.Login);
             }
 
 
@@ -463,7 +473,7 @@ namespace FruityNET.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return RedirectToAction(StringValue.ServerError);
+                return RedirectToAction(ActionName.ServerError);
             }
 
         }
@@ -511,13 +521,13 @@ namespace FruityNET.Controllers
             catch (DomainException ex)
             {
                 _logger.LogError(ex.Message);
-                return View(StringValue.NotFound);
+                return View(ActionName.NotFound);
 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return RedirectToAction(StringValue.ServerError);
+                return RedirectToAction(ActionName.ServerError);
             }
 
 
@@ -526,23 +536,39 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult Notifications()
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction(StringValue.Login);
-            var NotificationsViewDTO = new NotificationsViewDTO() { };
-            var Notifications = _notificationBox.GetUserNotifications(CurrentUser.UserName);
-            foreach (var notification in Notifications)
+            try
             {
-                NotificationsViewDTO.AllNotifications.Add(new NotificationDTO()
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var NotificationsViewDTO = new NotificationsViewDTO() { };
+                var Notifications = _notificationBox.GetUserNotifications(CurrentUser.UserName);
+                foreach (var notification in Notifications)
                 {
-                    Id = notification.Id,
-                    Message = notification.Message,
-                    NotificationBoxId = notification.NotificationBoxId,
-                    RecieverUsername = notification.RecieverUsername
-                });
+                    NotificationsViewDTO.AllNotifications.Add(new NotificationDTO()
+                    {
+                        Id = notification.Id,
+                        Message = notification.Message,
+                        NotificationBoxId = notification.NotificationBoxId,
+                        RecieverUsername = notification.RecieverUsername
+                    });
+                }
+
+                return View(NotificationsViewDTO);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.Login);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError");
             }
 
-            return View(NotificationsViewDTO);
+
         }
 
         public IActionResult DeleteNotification(Guid Id)
@@ -559,6 +585,7 @@ namespace FruityNET.Controllers
             }
             catch (DomainException ex)
             {
+                _logger.LogError(ex.Message);
                 return RedirectToAction("NotFound", "Accounts");
             }
             catch (Exception ex)
@@ -570,47 +597,140 @@ namespace FruityNET.Controllers
 
         }
 
+        [HttpGet]
+        public IActionResult PermissionExists()
+        {
+
+            return View();
+        }
+
 
 
         [HttpGet]
         public IActionResult GrantAdminAccess(Guid Id)
         {
-            var existingAccount = _userStore.GetById(Id);
-            var AccountDTO = new AccountDTO();
-            AccountDTO.UserId = existingAccount.UserId;
-            return View(AccountDTO);
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var CurrentUserAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (CurrentUserAccount.UserType.Equals(UserType.User))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var existingAccount = _userStore.GetById(Id);
+                if (existingAccount is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                if (existingAccount.UserType != UserType.Admin && existingAccount.UserType != UserType.SiteOwner)
+                {
+                    var AccountDTO = new AccountDTO();
+                    AccountDTO.UserId = existingAccount.UserId;
+                    return View(AccountDTO);
+                }
+                else
+                {
+                    throw new DomainException(ErrorMessages.AdminExists);
+                }
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.AdminExists))
+                    return RedirectToAction(ActionName.PermissionExists);
+
+                else if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction(ActionName.Login);
+
+                return RedirectToAction(ActionName.NotFound);
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
+
+
         }
 
         [HttpPost]
         public IActionResult GrantAdminAccess(AccountDTO accountDTO)
         {
-            var existingAccount = _userStore.GetById(accountDTO.Id);
-            _userStore.GrantAdmin(existingAccount);
-            var Notification = new Notification()
+            try
             {
-                Message = "You have been granted Admin access ",
-                NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingAccount.UserId).Id,
-                RecieverUsername = _userStore.GetByIdentityUserId(existingAccount.UserId).Username
-            };
+                var existingAccount = _userStore.GetById(accountDTO.Id);
+                _userStore.GrantAdmin(existingAccount);
+                var Notification = new Notification()
+                {
+                    Message = "You have been granted Admin access ",
+                    NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingAccount.UserId).Id,
+                    RecieverUsername = _userStore.GetByIdentityUserId(existingAccount.UserId).Username
+                };
+                _notificationBox.SendNotifcation(Notification);
+                _context.SaveChanges();
+                return RedirectToAction("AdminPortal");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
 
 
-            _notificationBox.SendNotifcation(Notification);
-            _context.SaveChanges();
-            return RedirectToAction("AdminPortal");
         }
 
         [HttpGet]
         public IActionResult RevokeAdminAccess(Guid Id)
         {
-            var existingAccount = _userStore.GetById(Id);
-            var AccountDTO = new AccountDTO();
-            AccountDTO.UserId = existingAccount.UserId;
-            return View(AccountDTO);
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var CurrentUserAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (CurrentUserAccount.UserType.Equals(UserType.User))
+                    throw new DomainException(ErrorMessages.ForbiddenAccess);
+
+                var existingAccount = _userStore.GetById(Id);
+                if (existingAccount is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
+                var AccountDTO = new AccountDTO();
+
+                AccountDTO.UserId = existingAccount.UserId;
+                return View(AccountDTO);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction(ActionName.Login);
+
+                if (ex.Message.Equals(ErrorMessages.ForbiddenAccess))
+                    return RedirectToAction(ActionName.NotAuthorized);
+
+                return RedirectToAction(ActionName.NotFound);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
+
+
         }
 
         [HttpPost]
         public IActionResult RevokeAdminAccess(AccountDTO accountDTO)
         {
+
             var existingAccount = _userStore.GetById(accountDTO.Id);
             existingAccount.UserType = UserType.User;
             var Notification = new Notification()
@@ -629,7 +749,7 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult ServerError()
         {
-
+            ViewBag.Message = StatusCodes.Status500InternalServerError.ToString();
             return View();
         }
     }

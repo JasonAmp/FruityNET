@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using FruityNET.Models;
+using Microsoft.Extensions.Logging;
+using FruityNET.ParameterStrings;
+using FruityNET.Exceptions;
 
 namespace FruityNET.Controllers
 {
@@ -19,15 +22,18 @@ namespace FruityNET.Controllers
         private readonly IUserStore _userStore;
         private readonly IFriendsListStore _FriendListStore;
         private readonly IGroupStore _GroupStore;
+        private readonly ILogger<GroupsController> _logger;
+
 
         public GroupsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
-        IUserStore _userStore, IFriendsListStore _FriendListStore, IGroupStore _GroupStore)
+        IUserStore _userStore, IFriendsListStore _FriendListStore, IGroupStore _GroupStore, ILogger<GroupsController> _logger)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this._context = _context;
             this._userStore = _userStore;
             this._GroupStore = _GroupStore;
+            this._logger = _logger;
         }
 
         [HttpGet]
@@ -39,71 +45,127 @@ namespace FruityNET.Controllers
         [HttpPost]
         public IActionResult AddGroup(AddGroupDTO AddGroupDTO)
         {
-            if (ModelState.IsValid)
+            try
             {
-                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-                var Group = new Group()
+                if (ModelState.IsValid)
                 {
-                    UserId = CurrentUser.Id,
-                    Name = AddGroupDTO.Name,
-                    Description = AddGroupDTO.Description,
-                    CreationDate = DateTime.Now
-                };
-                _GroupStore.CreateGroup(Group);
-                var GroupOwner = new GroupOwner()
-                {
-                    UserId = CurrentUser.Id,
-                    Username = CurrentUser.UserName,
-                    GroupId = Group.Id
-                };
-                var GroupUser = new GroupUser()
-                {
-                    UserId = CurrentUser.Id,
-                    Username = CurrentUser.UserName,
-                    GroupId = Group.Id
-                };
-                _GroupStore.CreateGroupOwner(GroupOwner);
-                _GroupStore.CreateGroupUser(GroupUser);
-                return RedirectToAction("Profile", "Accounts");
+                    var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                    var Group = new Group()
+                    {
+                        UserId = CurrentUser.Id,
+                        Name = AddGroupDTO.Name,
+                        Description = AddGroupDTO.Description,
+                        CreationDate = DateTime.Now
+                    };
+                    _GroupStore.CreateGroup(Group);
+                    var GroupOwner = new GroupOwner()
+                    {
+                        UserId = CurrentUser.Id,
+                        Username = CurrentUser.UserName,
+                        GroupId = Group.Id
+                    };
+                    var GroupUser = new GroupUser()
+                    {
+                        UserId = CurrentUser.Id,
+                        Username = CurrentUser.UserName,
+                        GroupId = Group.Id
+                    };
+                    _GroupStore.CreateGroupOwner(GroupOwner);
+                    _GroupStore.CreateGroupUser(GroupUser);
+                    return RedirectToAction("Profile", "Accounts");
+                }
+                return View(AddGroupDTO);
             }
-            return View(AddGroupDTO);
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
 
         }
 
         [HttpGet]
         public IActionResult GroupDetails(Guid Id)
         {
-            var existingGroup = _GroupStore.GetGroupById(Id);
-            var groupMembers = _GroupStore.GetGroupMembers(existingGroup.Id);
-            var Owner = _GroupStore.GetGroupOwner(existingGroup.Id);
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
 
-            var GroupDetailsDTO = new GroupDetailsDTO()
-            {
-                Id = existingGroup.Id,
-                Name = existingGroup.Name,
-                Description = existingGroup.Description,
-                CreationDate = existingGroup.CreationDate,
-                GroupOwner = Owner.Username
-            };
-            foreach (var member in groupMembers)
-            {
-                var GroupMemberDTO = new GroupMemberDTO()
+                var existingGroup = _GroupStore.GetGroupById(Id);
+                if (existingGroup is null)
+                    throw new DomainException(ErrorMessages.GroupDoesNotExist);
+
+                var groupMembers = _GroupStore.GetGroupMembers(existingGroup.Id);
+                var Owner = _GroupStore.GetGroupOwner(existingGroup.Id);
+
+                var GroupDetailsDTO = new GroupDetailsDTO()
                 {
-                    Id = member.Id,
-                    Username = member.Username,
-                    UserId = member.UserId,
-                    Type = member.Type
+                    Id = existingGroup.Id,
+                    Name = existingGroup.Name,
+                    Description = existingGroup.Description,
+                    CreationDate = existingGroup.CreationDate,
+                    GroupOwner = Owner.Username
                 };
-                GroupDetailsDTO.GroupMembers.Add(GroupMemberDTO);
+                foreach (var member in groupMembers)
+                {
+                    var GroupMemberDTO = new GroupMemberDTO()
+                    {
+                        Id = member.Id,
+                        Username = member.Username,
+                        UserId = member.UserId,
+                        Type = member.Type
+                    };
+                    GroupDetailsDTO.GroupMembers.Add(GroupMemberDTO);
+                }
+                return View(GroupDetailsDTO);
             }
-            return View(GroupDetailsDTO);
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+
+                return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
         }
 
 
         public IActionResult AddGroupMember(Guid Id)
         {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+                return View(new AddGroupUserDTO { Id = Id });
 
-            return View(new AddGroupUserDTO { Id = Id });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
 
         }
 
@@ -111,50 +173,73 @@ namespace FruityNET.Controllers
         [HttpPost]
         public IActionResult AddGroupMember(AddGroupUserDTO addGroupUserDTO)
         {
-            if (String.IsNullOrEmpty(addGroupUserDTO.Username))
-                ModelState.AddModelError("Error", "Please provide a Username");
-
-            if (ModelState.IsValid)
+            try
             {
-                var existingUser = _userStore.GetByUsername(addGroupUserDTO.Username);
-                if (existingUser is null)
-                    ModelState.AddModelError("Error", "User Does Not Exist.");
+                if (String.IsNullOrEmpty(addGroupUserDTO.Username))
+                    throw new DomainException(ErrorMessages.UserNotProvided);
 
-
-                var existingGroupMember = (existingUser != null) ? _GroupStore.GetGroupMembers(addGroupUserDTO.Id)
-                .FirstOrDefault(x => x.Username == addGroupUserDTO.Username) : null;
-
-                if (existingGroupMember != null)
-                    ModelState.AddModelError("Error", "User is already part of Group.");
-
-                else if (existingUser != null && existingGroupMember is null)
+                if (ModelState.IsValid)
                 {
-                    var GroupUser = new GroupUser()
+                    var existingUser = _userStore.GetByUsername(addGroupUserDTO.Username);
+                    if (existingUser is null)
+                        throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                    var existingGroupMember = (existingUser != null) ? _GroupStore.GetGroupMembers(addGroupUserDTO.Id)
+                    .FirstOrDefault(x => x.Username == addGroupUserDTO.Username) : null;
+
+                    if (existingGroupMember != null)
+                        throw new DomainException(ErrorMessages.GroupUserExists);
+
+
+                    else if (existingUser != null && existingGroupMember is null)
                     {
-                        UserId = existingUser.UserId,
-                        GroupId = addGroupUserDTO.Id,
-                        Username = addGroupUserDTO.Username,
-                        Type = GroupUserType.Member
-                    };
-                    _GroupStore.CreateGroupUser(GroupUser);
-                    ViewBag.Message = "Success";
-                    return View(addGroupUserDTO);
+                        var GroupUser = new GroupUser()
+                        {
+                            UserId = existingUser.UserId,
+                            GroupId = addGroupUserDTO.Id,
+                            Username = addGroupUserDTO.Username,
+                            Type = GroupUserType.Member
+                        };
+                        _GroupStore.CreateGroupUser(GroupUser);
+                        ViewBag.Message = "Success";
+                        return View(addGroupUserDTO);
+                    }
                 }
-
-
+                return View(addGroupUserDTO);
             }
-            return View(addGroupUserDTO);
-
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("Error", ex.Message);
+                return View(addGroupUserDTO);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
         }
         [HttpGet]
         public IActionResult SearchGroup()
         {
-            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (CurrentUser is null)
-                return RedirectToAction("Login", "Accounts");
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
 
-            return View(new SearchGroupViewModel());
-
+                return View(new SearchGroupViewModel());
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
         }
         [HttpPost]
         public IActionResult SearchGroup(SearchGroupViewModel searchGroupViewModel)
@@ -170,17 +255,11 @@ namespace FruityNET.Controllers
                     {
                         Groupname = existingGroup.Name,
                         GroupId = existingGroup.Id,
-
                     };
                     searchGroupViewModel.Groups.Add(GroupResult);
-
-
                 }
-
-
             }
             return View(searchGroupViewModel);
-
         }
 
 
@@ -188,8 +267,25 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult Delete(Guid Id)
         {
-            var existingGroup = _GroupStore.GetGroupById(Id);
-            return View(existingGroup);
+            try
+            {
+                var existingGroup = _GroupStore.GetGroupById(Id);
+                if (existingGroup is null)
+                    throw new DomainException(ErrorMessages.GroupDoesNotExist);
+                return View(existingGroup);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
 
         }
         [HttpPost]
@@ -205,7 +301,7 @@ namespace FruityNET.Controllers
                 _GroupStore.DeleteGroup(group);
 
             }
-            return RedirectToAction("Profile", "Accounts");
+            return RedirectToAction(ActionName.Profile, ControllerName.Accounts);
 
         }
 
@@ -213,34 +309,50 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult RemoveUser(Guid Id)
         {
-            var existingGroupMember = _GroupStore.GetGroupMemberById(Id);
-            if (existingGroupMember is null)
-                return RedirectToAction("NotFound", "Accounts");
-            var GroupID = existingGroupMember.GroupId.ToString().Clone();
-            var GroupMemberDTO = new GroupMemberDTO()
+            try
             {
-                GroupId = new Guid(GroupID.ToString()),
-                Id = existingGroupMember.Id,
-                Username = existingGroupMember.Username
-            };
-            return View(GroupMemberDTO);
+                var existingGroupMember = _GroupStore.GetGroupMemberById(Id);
+                if (existingGroupMember is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
 
+                var GroupID = existingGroupMember.GroupId.ToString().Clone();
+                var GroupMemberDTO = new GroupMemberDTO()
+                {
+                    GroupId = new Guid(GroupID.ToString()),
+                    Id = existingGroupMember.Id,
+                    Username = existingGroupMember.Username
+                };
+                return View(GroupMemberDTO);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
         }
         [HttpPost]
         public IActionResult RemoveUser(GroupMemberDTO GroupMemberDTO)
         {
-            var existingGroupMember = _GroupStore.GetGroupMemberById(GroupMemberDTO.Id);
-            var GroupID = new Guid(existingGroupMember.GroupId.ToString());
+            try
+            {
+                var existingGroupMember = _GroupStore.GetGroupMemberById(GroupMemberDTO.Id);
+                var GroupID = new Guid(existingGroupMember.GroupId.ToString());
 
 
-            _GroupStore.DeleteGroupUser(existingGroupMember);
-            return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
-
-
+                _GroupStore.DeleteGroupUser(existingGroupMember);
+                return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
         }
-
-
-
-
     }
 }

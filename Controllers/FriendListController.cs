@@ -7,6 +7,9 @@ using FruityNET.IEntityStore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using FruityNET.Exceptions;
+using FruityNET.ParameterStrings;
+using Microsoft.Extensions.Logging;
 
 namespace FruityNET.Controllers
 {
@@ -21,11 +24,15 @@ namespace FruityNET.Controllers
         private readonly AcceptedRequestDTO _acceptedRequest;
         private readonly INotificationBox _notificationBox;
 
+        private readonly ILogger<FriendListController> _logger;
+
+
 
 
 
         public FriendListController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
-        IUserStore _userStore, IFriendsListStore _FriendListStore, IRequestStore _RequestStore, INotificationBox _notificationBox)
+        IUserStore _userStore, IFriendsListStore _FriendListStore, IRequestStore _RequestStore, INotificationBox _notificationBox,
+        ILogger<FriendListController> _logger)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -34,6 +41,7 @@ namespace FruityNET.Controllers
             this._FriendListStore = _FriendListStore;
             this._RequestStore = _RequestStore;
             this._notificationBox = _notificationBox;
+            this._logger = _logger;
         }
 
 
@@ -48,91 +56,128 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult SendFriendInvite(Guid Id)
         {
-            var FriendList = _FriendListStore.GetFriendListById(Id);
-            if (FriendList is null)
-                return RedirectToAction("NotFound", "Accounts");
+            try
+            {
+                var FriendList = _FriendListStore.GetFriendListById(Id);
+                if (FriendList is null)
+                    throw new DomainException();
+                return View(FriendList);
 
-            return View(FriendList);
+            }
+            catch (DomainException ex)
+            {
+                return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+            }
+
+
+
         }
 
 
         [HttpPost]
         public IActionResult SendFriendInvite(FriendList friendList)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            var existingFriendList = _FriendListStore.GetFriendListById(friendList.Id);
+            try
+            {
+                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingFriendList = _FriendListStore.GetFriendListById(friendList.Id);
 
-            var RequestUser = new RequestUser()
-            {
-                UserId = _currentUser.Id,
-                Username = _currentUser.UserName,
-            };
-            _RequestStore.CreateRequestUser(RequestUser);
-            var Request = new Request()
-            {
-                Pending = true,
-                FriendListId = existingFriendList.Id,
-                RequestUserId = RequestUser.Id,
-                Username = _currentUser.UserName
-            };
-            var Notification = new Notification()
-            {
-                Message = $"You have a Friend Invite from {RequestUser.Username}",
-                NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingFriendList.UserId).Id,
-                RecieverUsername = _userStore.GetByIdentityUserId(existingFriendList.UserId).Username
-            };
-            _RequestStore.SendRequest(Request);
-            _notificationBox.SendNotifcation(Notification);
+                var RequestUser = new RequestUser()
+                {
+                    UserId = _currentUser.Id,
+                    Username = _currentUser.UserName,
+                };
+                _RequestStore.CreateRequestUser(RequestUser);
+                var Request = new Request()
+                {
+                    Pending = true,
+                    FriendListId = existingFriendList.Id,
+                    RequestUserId = RequestUser.Id,
+                    Username = _currentUser.UserName
+                };
+                var Notification = new Notification()
+                {
+                    Message = $"You have a Friend Invite from {RequestUser.Username}",
+                    NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingFriendList.UserId).Id,
+                    RecieverUsername = _userStore.GetByIdentityUserId(existingFriendList.UserId).Username
+                };
+                _RequestStore.SendRequest(Request);
+                _notificationBox.SendNotifcation(Notification);
 
-            _context.SaveChanges();
-            ViewBag.Message = "Success";
-            return RedirectToAction("Search", "Accounts");
+                _context.SaveChanges();
+                ViewBag.Message = "Success";
+                return RedirectToAction(ActionName.Search, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
         }
 
         [HttpGet]
         public IActionResult FriendRequests()
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (_currentUser is null)
-                return RedirectToAction("Login", "Accounts");
-            var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-
-            var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
-            var IncomingRequests = _RequestStore.GetAllRequests().FindAll(x => x.FriendListId == FriendList.Id);
-            var CurrentAsRequestUser = _RequestStore.GetAllRequestUsers().FirstOrDefault(x => x.UserId == _currentUser.Id);
-            var OutgoingRequests = (CurrentAsRequestUser is null) ? new List<Request>() : _RequestStore.GetAllRequests().FindAll(x => x.Username == CurrentAsRequestUser.Username);
-
-
-            var friendRequestViewDTO = new FriendRequestViewDTO();
-
-            foreach (var Request in IncomingRequests)
+            try
             {
-                var RequestUser = _RequestStore.GetRequestUserById(Request.RequestUserId);
-                friendRequestViewDTO.IncomingRequests.Add(new FriendRequestDTO()
+                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (_currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
+
+                var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
+                var IncomingRequests = _RequestStore.GetAllRequests().FindAll(x => x.FriendListId == FriendList.Id);
+                var CurrentAsRequestUser = _RequestStore.GetAllRequestUsers().FirstOrDefault(x => x.UserId == _currentUser.Id);
+                var OutgoingRequests = (CurrentAsRequestUser is null) ? new List<Request>() : _RequestStore.GetAllRequests().FindAll(x => x.Username == CurrentAsRequestUser.Username);
+
+
+                var friendRequestViewDTO = new FriendRequestViewDTO();
+
+                foreach (var Request in IncomingRequests)
                 {
-                    Id = Request.Id,
-                    RequestUserId = Request.RequestUserId,
-                    FriendListId = Request.FriendListId,
-                    Pending = Request.Pending,
-                    Username = RequestUser.Username
-                });
+                    var RequestUser = _RequestStore.GetRequestUserById(Request.RequestUserId);
+                    friendRequestViewDTO.IncomingRequests.Add(new FriendRequestDTO()
+                    {
+                        Id = Request.Id,
+                        RequestUserId = Request.RequestUserId,
+                        FriendListId = Request.FriendListId,
+                        Pending = Request.Pending,
+                        Username = RequestUser.Username
+                    });
+                }
+
+                foreach (var Request in OutgoingRequests)
+                {
+
+                    var InviteeFriendsList = _FriendListStore.GetFriendListById(Request.FriendListId);
+                    var Invitee = _userStore.GetByIdentityUserId(InviteeFriendsList.UserId);
+                    friendRequestViewDTO.OutgoingRequests.Add(new FriendRequestDTO()
+                    {
+                        Id = Request.Id,
+                        RequestUserId = Request.RequestUserId,
+                        FriendListId = Request.FriendListId,
+                        Pending = Request.Pending,
+                        Username = Invitee.Username
+                    });
+                }
+                return View(friendRequestViewDTO);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+
             }
 
-            foreach (var Request in OutgoingRequests)
-            {
 
-                var InviteeFriendsList = _FriendListStore.GetFriendListById(Request.FriendListId);
-                var Invitee = _userStore.GetByIdentityUserId(InviteeFriendsList.UserId);
-                friendRequestViewDTO.OutgoingRequests.Add(new FriendRequestDTO()
-                {
-                    Id = Request.Id,
-                    RequestUserId = Request.RequestUserId,
-                    FriendListId = Request.FriendListId,
-                    Pending = Request.Pending,
-                    Username = Invitee.Username
-                });
-            }
-            return View(friendRequestViewDTO);
 
         }
 

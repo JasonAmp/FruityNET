@@ -28,7 +28,7 @@
 
                <div class="form-group">
                     
-                    <label asp-for="Username">Username
+                    <label asp-for="Username" placeholder="Username">Invite to Join Group
                     </label>
                      <input  asp-for="Username" type="text"></input>
                     <span asp-validation-for="Username" class="text-danger"></span>
@@ -39,7 +39,7 @@
                 
                 
                 
-            <button type="submit" class="btn btn-primary">Add to Group</button> <a class="btn btn-default btn-sm"
+            <button type="submit" class="btn btn-success">Add to Group</button> <a class="btn btn-default btn-sm"
                         asp-controller="Groups"
 
                         asp-action="GroupDetails"

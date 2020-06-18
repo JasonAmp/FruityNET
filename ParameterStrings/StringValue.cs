@@ -1,12 +1,15 @@
 ﻿namespace FruityNET.ParameterStrings
 {
-    public class StringValue
+    public class ActionName
     {
-        public const string Accounts = "Accounts";
+
 
         #region Accounts
         public const string Profile = "Profile";
         public const string AdminPortal = "AdminPortal";
+
+        public const string PermissionExists = "PermissionExists";
+
         public const string GrantAdminAccess = "GrantAdminAccess";
         public const string RevokeAdminAccess = "RevokeAdminAccess";
         public const string Login = "Login";
@@ -25,14 +28,15 @@
         public const string NotAuthorized = "NotAuthorized";
         public const string NotFound = "NotFound";
         public const string Notifications = "Notifications";
-
-
-
-
-
-
-
         #endregion"
+    }
+    public class ControllerName
+    {
+        public const string Accounts = "Accounts";
+        public const string FriendList = "FriendList";
+        public const string Groups = "Groups";
+        public const string Posts = "Posts";
+        public const string Home = "Home";
     }
 
 }

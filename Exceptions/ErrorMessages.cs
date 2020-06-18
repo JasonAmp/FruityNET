@@ -4,6 +4,13 @@ namespace FruityNET.Exceptions
     {
         public const string UserDoesNotExist = "User Does Not Exist.";
         public const string RequiredValuesNotProvided = "Required fields not provided";
+        public const string InvalidInput = "Required fields have invalid input";
+        public const string UserNotProvided = "Please provide a Username";
+
+
+
+        public const string AdminExists = "User is an existing Admin.";
+
 
 
 
