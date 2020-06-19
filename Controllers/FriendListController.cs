@@ -329,13 +329,17 @@ namespace FruityNET.Controllers
             {
                 Message = $"You and {FriendForCurrentUserUsername} are now friends.",
                 NotificationBoxId = CurrentUserNotificationBoxID,
-                RecieverUsername = FriendForOtherUserUsername
+                RecieverUsername = FriendForOtherUserUsername,
+                NotificationDate = DateTime.Now
+
             });
             _notificationBox.SendNotifcation(new Notification()
             {
                 Message = $"You and {FriendForOtherUserUsername} are now friends.",
                 NotificationBoxId = OtherUserNotificationBoxID,
-                RecieverUsername = FriendForCurrentUserUsername
+                RecieverUsername = FriendForCurrentUserUsername,
+                NotificationDate = DateTime.Now
+
             });
         }
 

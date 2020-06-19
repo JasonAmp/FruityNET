@@ -22,5 +22,9 @@ namespace FruityNET.DTOs
         public Guid NotificationBoxId { get; set; }
 
         public string RecieverUsername { get; set; }
+
+        public double ElapsedHour { get; set; }
+        public double ElapsedMinute { get; set; }
+
     }
 }
