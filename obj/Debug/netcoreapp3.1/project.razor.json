@@ -20531,6 +20531,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/PermissionExists.cshtml",
+      "TargetPath": "Views\\Accounts\\PermissionExists.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Home/Privacy.cshtml",
       "TargetPath": "Views\\Home\\Privacy.cshtml",
       "FileKind": "mvc"
@@ -20553,6 +20558,11 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/Notifications.cshtml",
       "TargetPath": "Views\\Accounts\\Notifications.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/Suspend.cshtml",
+      "TargetPath": "Views\\Accounts\\Suspend.cshtml",
       "FileKind": "mvc"
     },
     {
@@ -20713,6 +20723,11 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/RemoveUser.cshtml",
       "TargetPath": "Views\\Groups\\RemoveUser.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/Activate.cshtml",
+      "TargetPath": "Views\\Accounts\\Activate.cshtml",
       "FileKind": "mvc"
     },
     {
