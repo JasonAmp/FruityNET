@@ -38,6 +38,11 @@ namespace FruityNET.Controllers
         [HttpGet]
         public IActionResult AddGroup()
         {
+            var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+            if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                signInManager.SignOutAsync();
+
             return View();
         }
 
@@ -49,6 +54,9 @@ namespace FruityNET.Controllers
                 if (ModelState.IsValid)
                 {
                     var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                    var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                    if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                        signInManager.SignOutAsync();
                     var Group = new Group()
                     {
                         UserId = CurrentUser.Id,
@@ -98,6 +106,9 @@ namespace FruityNET.Controllers
                 var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
                 if (CurrentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
 
                 var existingGroup = _GroupStore.GetGroupById(Id);
                 if (existingGroup is null)
@@ -152,6 +163,9 @@ namespace FruityNET.Controllers
                 var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
                 if (CurrentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
                 return View(new AddGroupUserDTO { Id = Id });
 
             }
@@ -227,6 +241,10 @@ namespace FruityNET.Controllers
                 if (CurrentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 return View(new SearchGroupViewModel());
             }
             catch (DomainException ex)
@@ -268,10 +286,17 @@ namespace FruityNET.Controllers
         {
             try
             {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 var existingGroup = _GroupStore.GetGroupById(Id);
                 if (existingGroup is null)
                     throw new DomainException(ErrorMessages.GroupDoesNotExist);
                 return View(existingGroup);
+
+
             }
             catch (DomainException ex)
             {
@@ -310,6 +335,11 @@ namespace FruityNET.Controllers
         {
             try
             {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 var existingGroupMember = _GroupStore.GetGroupMemberById(Id);
                 if (existingGroupMember is null)
                     throw new DomainException(ErrorMessages.UserDoesNotExist);

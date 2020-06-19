@@ -45,8 +45,15 @@ namespace FruityNET
             services.AddScoped<INotificationBox, NotificationBoxStore>();
             services.AddScoped<IGroupStore, GroupStore>();
             services.AddSingleton<CurrentPostDTO>();
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+                options.LoginPath = "/Accounts/Login";
+                options.SlidingExpiration = true;
+            });
             services.AddControllersWithViews();
             services.AddRazorPages();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using FruityNET.ParameterStrings;
+using FruityNET.Enums;
 
 namespace FruityNET.Controllers
 {
@@ -56,6 +57,8 @@ namespace FruityNET.Controllers
                 if (CurrentUser is null)
                     return RedirectToAction("Login", "Accounts");
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
 
                 return View(new AddPostDTO
                 {
@@ -80,6 +83,8 @@ namespace FruityNET.Controllers
             {
                 var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
 
                 if (ModelState.IsValid)
                 {
@@ -117,6 +122,9 @@ namespace FruityNET.Controllers
                     return RedirectToAction("Login", "Accounts");
 
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 var friendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
                 friendList.Users = _FriendListStore.GetFriendsOfUser(friendList.Id);
 
@@ -127,18 +135,23 @@ namespace FruityNET.Controllers
                 };
                 foreach (var friend in friendList.Users)
                 {
-                    var AllPosts = _postStore.AllPostByUser(friend.UserId);
-                    foreach (var post in AllPosts)
+                    var FriendAccount = _userStore.GetByIdentityUserId(friend.UserId);
+                    if (FriendAccount.AccountStatus.Equals(Status.Active))
                     {
-                        var PostDTO = new PostDTO
+                        var AllPosts = _postStore.AllPostByUser(friend.UserId);
+                        foreach (var post in AllPosts)
                         {
-                            Id = post.Id,
-                            Content = post.Content,
-                            DatePosted = post.DatePosted,
-                            Username = friend.Username,
-                        };
-                        postViewDTO.AllPosts.Add(PostDTO);
+                            var PostDTO = new PostDTO
+                            {
+                                Id = post.Id,
+                                Content = post.Content,
+                                DatePosted = post.DatePosted,
+                                Username = friend.Username,
+                            };
+                            postViewDTO.AllPosts.Add(PostDTO);
+                        }
                     }
+
                 }
 
                 foreach (var post in _postStore.AllPostByCurrentUser(CurrentUser.Id))
@@ -174,6 +187,9 @@ namespace FruityNET.Controllers
                     return RedirectToAction("Login", "Accounts");
 
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 var post = _postStore.ViewPost(Id);
 
                 if (post is null)
@@ -228,6 +244,8 @@ namespace FruityNET.Controllers
                     return RedirectToAction("Login", "Accounts");
 
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
 
                 var existingPost = _postStore.GetById(Id);
                 if (existingPost is null)
@@ -278,6 +296,11 @@ namespace FruityNET.Controllers
             try
             {
                 var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 var existingPost = _postStore.GetById(Id);
                 if (existingPost is null)
                     return RedirectToAction("NotFound", "Accounts");
@@ -317,6 +340,8 @@ namespace FruityNET.Controllers
                 if (CurrentUser is null)
                     return RedirectToAction("Login", "Accounts");
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
                 _currentpost.Id = Id;
 
                 var existingPost = _postStore.ViewPost(Id);

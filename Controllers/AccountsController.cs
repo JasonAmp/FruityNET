@@ -55,6 +55,9 @@ namespace FruityNET.Controllers
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
 
                 if (existingAccount.UserType != UserType.Admin && existingAccount.UserType != UserType.SiteOwner)
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
@@ -288,6 +291,9 @@ namespace FruityNET.Controllers
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
                 var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
                 var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
 
@@ -307,14 +313,18 @@ namespace FruityNET.Controllers
                 foreach (var friend in FriendUsers)
                 {
                     var account = _userStore.GetByUsername(friend.Username);
-                    var FriendDTO = new FriendDTO()
+                    if (account.AccountStatus.Equals(Status.Active))
                     {
-                        Id = friend.Id,
-                        UserId = friend.UserId,
-                        Username = friend.Username,
-                        AccountId = account.Id
-                    };
-                    ProfileViewModel.Friends.Add(FriendDTO);
+                        var FriendDTO = new FriendDTO()
+                        {
+                            Id = friend.Id,
+                            UserId = friend.UserId,
+                            Username = friend.Username,
+                            AccountId = account.Id
+                        };
+                        ProfileViewModel.Friends.Add(FriendDTO);
+                    }
+
                 }
                 return View(ProfileViewModel);
             }
@@ -340,6 +350,8 @@ namespace FruityNET.Controllers
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
                 var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
 
                 return View(new EditProfileViewModel
                 {
@@ -409,6 +421,10 @@ namespace FruityNET.Controllers
                 if (currentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
+                var existingAccount = _userStore.GetByIdentityUserId(currentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 return View(new SearchUserDTO());
             }
             catch (DomainException ex)
@@ -442,7 +458,9 @@ namespace FruityNET.Controllers
                 {
                     var ResultUser = _userStore.GetByUsername(searchUserDTO.Username);
                     var currentUser = _context.Users.Find(userManager.GetUserId(User));
-                    if (ResultUser is null)
+
+                    if (ResultUser is null || ResultUser.AccountStatus.Equals(Status.Suspended)
+                    || ResultUser.AccountStatus.Equals(Status.Inactive))
                         throw new DomainException(ErrorMessages.UserDoesNotExist);
 
                     else
@@ -496,8 +514,11 @@ namespace FruityNET.Controllers
         {
             try
             {
+
+
                 var existingAccount = _userStore.GetById(Id);
-                if (existingAccount is null)
+                if (existingAccount is null || existingAccount.AccountStatus.Equals(Status.Suspended)
+                || existingAccount.AccountStatus.Equals(Status.Inactive))
                     throw new DomainException(ErrorMessages.UserDoesNotExist);
 
                 var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
@@ -554,6 +575,10 @@ namespace FruityNET.Controllers
                 if (CurrentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
                 var NotificationsViewDTO = new NotificationsViewDTO() { };
                 var Notifications = _notificationBox.GetUserNotifications(CurrentUser.UserName);
                 foreach (var notification in Notifications)
@@ -585,9 +610,13 @@ namespace FruityNET.Controllers
 
         public IActionResult DeleteNotification(Guid Id)
         {
-            var existingNotification = _notificationBox.GetNotificationById(Id);
             try
             {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingNotification = _notificationBox.GetNotificationById(Id);
                 if (existingNotification is null)
                     throw new DomainException();
 
@@ -598,6 +627,8 @@ namespace FruityNET.Controllers
             catch (DomainException ex)
             {
                 _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction(ActionName.Login);
                 return RedirectToAction("NotFound", "Accounts");
             }
             catch (Exception ex)
@@ -627,13 +658,19 @@ namespace FruityNET.Controllers
                 if (CurrentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
+
+
                 var CurrentUserAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
                 if (CurrentUserAccount.UserType.Equals(UserType.User))
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
                 var existingAccount = _userStore.GetById(Id);
-                if (existingAccount is null)
+                if (existingAccount is null || existingAccount.AccountStatus.Equals(Status.Suspended)
+                || existingAccount.AccountStatus.Equals(Status.Inactive))
                     throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                if (CurrentUserAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
 
                 if (existingAccount.UserType != UserType.Admin && existingAccount.UserType != UserType.SiteOwner)
                 {
@@ -709,11 +746,19 @@ namespace FruityNET.Controllers
 
                 var CurrentUserAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
                 if (CurrentUserAccount.UserType.Equals(UserType.User))
-                    throw new DomainException(ErrorMessages.ForbiddenAccess);
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                if (CurrentUserAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
 
                 var existingAccount = _userStore.GetById(Id);
-                if (existingAccount is null)
+
+
+                if (existingAccount is null || existingAccount.AccountStatus.Equals(Status.Suspended)
+                || existingAccount.AccountStatus.Equals(Status.Inactive))
                     throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+
                 var AccountDTO = new AccountDTO();
 
                 AccountDTO.UserId = existingAccount.UserId;
@@ -729,6 +774,11 @@ namespace FruityNET.Controllers
                     return RedirectToAction(ActionName.NotAuthorized);
 
                 return RedirectToAction(ActionName.NotFound);
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized);
             }
             catch (Exception ex)
             {
@@ -840,7 +890,8 @@ namespace FruityNET.Controllers
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
                 var existingAccount = _userStore.GetById(Id);
-                if (existingAccount is null)
+                if (existingAccount is null || existingAccount.AccountStatus.Equals(Status.Suspended)
+                || existingAccount.AccountStatus.Equals(Status.Inactive))
                     throw new DomainException(ErrorMessages.UserDoesNotExist);
 
                 return View(new ActivatetDTO() { AccountID = Id });
