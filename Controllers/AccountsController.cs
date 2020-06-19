@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using FruityNET.ParameterStrings;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace FruityNET.Controllers
 {
@@ -225,9 +227,8 @@ namespace FruityNET.Controllers
                         var NotificationBox = _notificationBox.CreateNotificationBox(new NotificationBox() { UserId = user.Id });
                         userAccount.FriendList = UserFriendList.Users;
                         CreateAccount(userAccount);
-
-                        //await signInManager.SignInAsync(user, isPersistent: false);
-                        return RedirectToAction("Index", "Home");
+                        ViewBag.Message = "Success";
+                        return View(model);
 
                     }
 
@@ -583,12 +584,18 @@ namespace FruityNET.Controllers
                 var Notifications = _notificationBox.GetUserNotifications(CurrentUser.UserName);
                 foreach (var notification in Notifications)
                 {
+                    var ElapsedMinutes = DateTime.Now.Subtract(notification.NotificationDate).TotalMinutes;
+                    var ElapsedHours = DateTime.Now.Subtract(notification.NotificationDate).TotalHours;
+
+
                     NotificationsViewDTO.AllNotifications.Add(new NotificationDTO()
                     {
                         Id = notification.Id,
                         Message = notification.Message,
                         NotificationBoxId = notification.NotificationBoxId,
-                        RecieverUsername = notification.RecieverUsername
+                        RecieverUsername = notification.RecieverUsername,
+                        ElapsedHour = Math.Round(ElapsedHours, 1),
+                        ElapsedMinute = Math.Round(ElapsedMinutes)
                     });
                 }
 
@@ -720,7 +727,9 @@ namespace FruityNET.Controllers
                 {
                     Message = "You have been granted Admin access ",
                     NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingAccount.UserId).Id,
-                    RecieverUsername = _userStore.GetByIdentityUserId(existingAccount.UserId).Username
+                    RecieverUsername = _userStore.GetByIdentityUserId(existingAccount.UserId).Username,
+                    NotificationDate = DateTime.Now
+
                 };
                 _notificationBox.SendNotifcation(Notification);
                 _context.SaveChanges();
@@ -799,7 +808,8 @@ namespace FruityNET.Controllers
             {
                 Message = "Your Admin permissions have been Revoked ",
                 NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingAccount.UserId).Id,
-                RecieverUsername = _userStore.GetByIdentityUserId(existingAccount.UserId).Username
+                RecieverUsername = _userStore.GetByIdentityUserId(existingAccount.UserId).Username,
+                NotificationDate = DateTime.Now
             };
 
 
@@ -927,6 +937,46 @@ namespace FruityNET.Controllers
                 existingAccount.AccountStatus = Status.Suspended;
                 _context.SaveChanges();
                 return RedirectToAction(ActionName.AdminPortal);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
+
+
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ResetPassword(ResetPasswordModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var existingUser = userManager.Users.FirstOrDefault(x => x.UserName.Equals(model.UserName));
+                    if (existingUser is null)
+                        throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                    var passwordHasher = new PasswordHasher<User>();
+                    var NewPasswordHash = passwordHasher.HashPassword(existingUser, model.Password);
+                    existingUser.PasswordHash = NewPasswordHash;
+                    _context.SaveChanges();
+                    ViewBag.Message = "Success";
+                }
+                return View(model);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("Error", ex.Message);
+                return View(model);
             }
             catch (Exception ex)
             {

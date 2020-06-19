@@ -36,7 +36,8 @@ namespace FruityNET
 
             services.AddDbContextPool<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("aws")));
-            services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
             services.AddScoped<IUserStore, UserStore>();
             services.AddScoped<IPostStore, PostStore>();
             services.AddScoped<IFriendsListStore, FriendListStore>();
@@ -51,6 +52,7 @@ namespace FruityNET
                 options.LoginPath = "/Accounts/Login";
                 options.SlidingExpiration = true;
             });
+
             services.AddControllersWithViews();
             services.AddRazorPages();
 

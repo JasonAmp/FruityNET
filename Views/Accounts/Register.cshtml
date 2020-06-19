@@ -15,6 +15,11 @@
        
     </div>
 }
+@if (!String.IsNullOrEmpty(ViewBag.Message))
+{
+    <div class="alert alert-info"> Account has been successfully created and needs to be activated by an Admin.
+    </div>
+}<br>
 
                 <br>
                 <h3 >Sign Up</h3><br>
