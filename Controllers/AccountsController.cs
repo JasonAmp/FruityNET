@@ -581,7 +581,10 @@ namespace FruityNET.Controllers
                     signInManager.SignOutAsync();
 
                 var NotificationsViewDTO = new NotificationsViewDTO() { };
-                var Notifications = _notificationBox.GetUserNotifications(CurrentUser.UserName);
+                var Notifications = from x in _notificationBox.GetUserNotifications(CurrentUser.UserName)
+                                    orderby x.NotificationDate descending
+                                    select x;
+
                 foreach (var notification in Notifications)
                 {
                     var ElapsedMinutes = DateTime.Now.Subtract(notification.NotificationDate).TotalMinutes;
