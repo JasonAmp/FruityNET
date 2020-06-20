@@ -123,7 +123,8 @@ namespace FruityNET.Controllers
                     Name = existingGroup.Name,
                     Description = existingGroup.Description,
                     CreationDate = existingGroup.CreationDate,
-                    GroupOwner = Owner.Username
+                    GroupOwner = Owner.Username,
+                    CurrentUsername = CurrentUser.UserName
                 };
                 foreach (var member in groupMembers)
                 {
@@ -166,8 +167,21 @@ namespace FruityNET.Controllers
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
+
+                var existingGroup = _GroupStore.GetGroupOwner(Id);
+                if (CurrentUser.Id.Equals(existingGroup.UserId) is false)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+
+
                 return View(new AddGroupUserDTO { Id = Id });
 
+
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
             }
             catch (DomainException ex)
             {
@@ -340,11 +354,17 @@ namespace FruityNET.Controllers
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
 
+
+
                 var existingGroupMember = _GroupStore.GetGroupMemberById(Id);
                 if (existingGroupMember is null)
                     throw new DomainException(ErrorMessages.UserDoesNotExist);
 
                 var GroupID = existingGroupMember.GroupId.ToString().Clone();
+
+                var existingGroup = _GroupStore.GetGroupOwner(existingGroupMember.GroupId);
+                if (CurrentUser.Id.Equals(existingGroup.UserId) is false)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
                 var GroupMemberDTO = new GroupMemberDTO()
                 {
                     GroupId = new Guid(GroupID.ToString()),
@@ -358,6 +378,11 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
 
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
             }
             catch (Exception ex)
             {

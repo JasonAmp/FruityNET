@@ -7,6 +7,8 @@ namespace FruityNET.DTOs
 {
     public class GroupDetailsDTO
     {
+        public string CurrentUsername { get; set; }
+
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }

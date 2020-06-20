@@ -597,7 +597,7 @@ namespace FruityNET.Controllers
                         Message = notification.Message,
                         NotificationBoxId = notification.NotificationBoxId,
                         RecieverUsername = notification.RecieverUsername,
-                        ElapsedHour = Math.Round(ElapsedHours, 1),
+                        ElapsedHour = Math.Round(ElapsedHours),
                         ElapsedMinute = Math.Round(ElapsedMinutes)
                     });
                 }

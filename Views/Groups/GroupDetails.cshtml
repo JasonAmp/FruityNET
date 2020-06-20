@@ -13,7 +13,9 @@
 }
 
 <h4>Group Details</h4><br>
-<a class="btn btn-primary btn-sm"
+@if(Model.GroupOwner.Equals(Model.CurrentUsername))
+{
+  <a class="btn btn-primary btn-sm"
                         asp-controller="Groups"
 
                         asp-action="AddGroupMember"
@@ -21,6 +23,9 @@
                          asp-route-id="@Model.Id">
                         Add User To Group
                 </a><br></br>
+}
+
+
 <div class="card">
   <div class="card-header">
     @Model.Name
@@ -43,6 +48,8 @@
         <li class="list-group-item">@user.Username
           @if(user.UserId != UserManager.GetUserId(User) )
           {
+            @if(Model.GroupOwner.Equals(Model.CurrentUsername))
+            {
              <a class="btn btn-danger btn-sm"
                         asp-controller="Groups"
 
@@ -50,7 +57,7 @@
 
                          asp-route-id="@user.Id">
                         Remove
-                </a>
+                </a>}
           }
          
          
