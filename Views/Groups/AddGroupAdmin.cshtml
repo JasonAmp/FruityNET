@@ -1,0 +1,33 @@
+@using FruityNET.DTOs
+
+
+
+
+@model GroupMemberDTO
+
+@{
+    ViewData["Title"] = "Add Admin";
+}
+
+
+    <div class="alert alert-info">Are you sure you want to make this User a Group Admin?
+    </div>
+
+
+
+<form asp-action="ConfirmGroupAdmin" asp-route-id="@Model.Id" method="post" role="form">
+
+         
+                   
+                
+                
+                
+            <button type="submit" class="btn btn-danger">Confirm Admin</button> <a class="btn btn-default btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="GroupDetails"
+
+                         asp-route-id="@Model.GroupId">
+                        Back to Group
+                </a> <br>
+        </form>

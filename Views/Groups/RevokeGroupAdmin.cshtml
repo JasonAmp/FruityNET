@@ -1,0 +1,33 @@
+@using FruityNET.DTOs
+
+
+
+
+@model GroupMemberDTO
+
+@{
+    ViewData["Title"] = "Revoke Group Admin";
+}
+
+
+    <div class="alert alert-danger">Are you sure you want to remove this Admin?
+    </div>
+
+
+
+<form asp-action="ConfirmRevoke" asp-route-id="@Model.Id" method="post" role="form">
+
+         
+                   
+                
+                
+                
+            <button type="submit" class="btn btn-danger">Revoke Admin</button> <a class="btn btn-default btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="GroupDetails"
+
+                         asp-route-id="@Model.GroupId">
+                        Back to Group
+                </a> <br>
+        </form>

@@ -1,0 +1,56 @@
+@using FruityNET.Entities
+
+
+
+
+@model Group
+
+@{
+    ViewData["Title"] = "Edit Group";
+}
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState["Error"].Errors.Count > 0)
+{
+    <div class="alert alert-danger">@ViewData.ModelState["Error"].Errors.First().ErrorMessage
+    </div>
+}
+
+@if (!String.IsNullOrEmpty(ViewBag.Message))
+{
+    <div class="alert alert-info"> Changes have been successfully added to group.
+    </div>
+}<br>
+<br/>
+<h4 style="text-align: center;">Edit Group</h4><br>
+
+<form style="text-align: center;" asp-action="Edit" method="post" role="form">
+
+               <div class="form-group">
+                    
+                    <label asp-for="Name">Name
+                    </label>
+                    <textarea  asp-for="Name" class="form-control"/></textarea>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    
+                    <label asp-for="Description">Description
+                    </label>
+                    <textarea  asp-for="Description" class="form-control"/></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+                    
+                   
+                
+                
+                
+            <button type="submit" class="btn btn-info">Save Changes</button> <a class="btn btn-default btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="GroupDetails"
+
+                         asp-route-id="@Model.Id">
+                        Back to Group
+                </a><br>
+        </form>
+        

@@ -1,6 +1,8 @@
 @using FruityNET.DTOs
 @using Microsoft.AspNetCore.Identity
 @using FruityNET.Entities
+@using FruityNET.Enums
+
 
 
 @inject SignInManager<User> SignInManager
@@ -22,6 +24,13 @@
 
                          asp-route-id="@Model.Id">
                         Add User To Group
+                </a> <a class="btn btn-primary btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="Edit"
+
+                         asp-route-id="@Model.Id">
+                          Edit Group
                 </a><br></br>
 }
 
@@ -57,7 +66,30 @@
 
                          asp-route-id="@user.Id">
                         Remove
-                </a>}
+                </a>
+                @if(user.Type != GroupUserType.Admin)
+                {
+                   <a class="btn btn-primary btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="AddGroupAdmin"
+
+                         asp-route-id="@user.Id">
+                        Grant Admin Access
+                </a>
+                }
+                else
+                {
+                   <a class="btn btn-danger btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="RevokeGroupAdmin"
+
+                         asp-route-id="@user.Id">
+                        Revoke Admin 
+                </a>
+                }
+               }
           }
          
          
