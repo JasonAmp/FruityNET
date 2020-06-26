@@ -1,0 +1,22 @@
+
+@model GroupDetailsDTO
+@using FruityNET.DTOs
+
+
+@{
+    ViewData["Title"] = "Group Request";
+}
+
+
+            <div class="alert alert-info">Send request to join this group?
+    </div>
+        <h1>Send Group Request</h1>
+
+
+
+        <form asp-action="ConfirmSend" asp-route-id="@Model.Id" method="post" role="form">
+
+
+                
+            <button type="submit" class="btn btn-success">Confirm to Send</button><br>
+        </form>

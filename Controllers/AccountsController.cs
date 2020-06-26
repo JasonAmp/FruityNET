@@ -589,6 +589,9 @@ namespace FruityNET.Controllers
                 {
                     var ElapsedMinutes = DateTime.Now.Subtract(notification.NotificationDate).TotalMinutes;
                     var ElapsedHours = DateTime.Now.Subtract(notification.NotificationDate).TotalHours;
+                    var ElapsedDays = DateTime.Now.Subtract(notification.NotificationDate).TotalDays;
+                    var ElapsedMonths = DateTime.Now.Subtract(notification.NotificationDate).TotalDays / 12;
+
 
 
                     NotificationsViewDTO.AllNotifications.Add(new NotificationDTO()
@@ -598,7 +601,8 @@ namespace FruityNET.Controllers
                         NotificationBoxId = notification.NotificationBoxId,
                         RecieverUsername = notification.RecieverUsername,
                         ElapsedHour = Math.Round(ElapsedHours),
-                        ElapsedMinute = Math.Round(ElapsedMinutes)
+                        ElapsedMinute = Math.Round(ElapsedMinutes),
+                        ElapsedDay = Math.Round(ElapsedDays)
                     });
                 }
 

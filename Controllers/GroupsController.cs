@@ -11,6 +11,7 @@ using FruityNET.Models;
 using Microsoft.Extensions.Logging;
 using FruityNET.ParameterStrings;
 using FruityNET.Exceptions;
+using System.Collections.Generic;
 
 namespace FruityNET.Controllers
 {
@@ -21,11 +22,13 @@ namespace FruityNET.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IUserStore _userStore;
         private readonly IGroupStore _GroupStore;
+        private readonly IGroupRequestStore _GroupRequestStore;
+
         private readonly ILogger<GroupsController> _logger;
 
 
         public GroupsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
-        IUserStore _userStore, IGroupStore _GroupStore, ILogger<GroupsController> _logger)
+        IUserStore _userStore, IGroupStore _GroupStore, ILogger<GroupsController> _logger, IGroupRequestStore _GroupRequestStore)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -33,6 +36,7 @@ namespace FruityNET.Controllers
             this._userStore = _userStore;
             this._GroupStore = _GroupStore;
             this._logger = _logger;
+            this._GroupRequestStore = _GroupRequestStore;
         }
 
         [HttpGet]
@@ -114,8 +118,29 @@ namespace FruityNET.Controllers
                 if (existingGroup is null)
                     throw new DomainException(ErrorMessages.GroupDoesNotExist);
 
+
                 var groupMembers = _GroupStore.GetGroupMembers(existingGroup.Id);
                 var Owner = _GroupStore.GetGroupOwner(existingGroup.Id);
+                var Requests = _GroupRequestStore.GetGroupRequestsOfGroup(existingGroup.Id);
+                var RequestDTOs = new List<GroupRequestDTO>();
+
+                foreach (var request in Requests)
+                {
+                    var requestUser = _GroupRequestStore.GetGroupRequestUser(request.RequestUserId);
+                    var GroupRequestDTO = new GroupRequestDTO()
+                    {
+                        Username = requestUser.Username,
+                        Id = request.Id,
+                        GroupID = request.GroupId,
+                        RequestDate = request.RequestDate,
+                        RequestUserId = request.RequestUserId
+                    };
+                    RequestDTOs.Add(GroupRequestDTO);
+                }
+                var CurrentUserAsRequestUser = RequestDTOs
+               .FirstOrDefault(x => x.Username == CurrentUser.UserName);
+                var CurrentUserAsMember = groupMembers
+                .FirstOrDefault(x => x.Username == CurrentUser.UserName);
 
                 var GroupDetailsDTO = new GroupDetailsDTO()
                 {
@@ -124,7 +149,10 @@ namespace FruityNET.Controllers
                     Description = existingGroup.Description,
                     CreationDate = existingGroup.CreationDate,
                     GroupOwner = Owner.Username,
-                    CurrentUsername = CurrentUser.UserName
+                    CurrentUsername = CurrentUser.UserName,
+                    GroupRequests = RequestDTOs,
+                    PendingRequest = (CurrentUserAsRequestUser != null) ? true : false,
+                    ExistingMember = (CurrentUserAsMember != null) ? true : false
                 };
                 foreach (var member in groupMembers)
                 {
@@ -344,6 +372,11 @@ namespace FruityNET.Controllers
         }
 
 
+
+
+
+
+
         [HttpGet]
         public IActionResult RemoveUser(Guid Id)
         {
@@ -401,6 +434,425 @@ namespace FruityNET.Controllers
 
                 _GroupStore.DeleteGroupUser(existingGroupMember);
                 return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+
+        public IActionResult Edit(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+
+                var existingGroup = _GroupStore.GetGroupById(Id);
+                if (CurrentUser.Id.Equals(existingGroup.UserId) is false)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var editGroupDTO = new EditGroupDTO() { GroupID = new Guid(Id.ToString()) };
+                return View(existingGroup);
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Group Group)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var existingGroup = _GroupStore.GetGroupById(Group.Id);
+                    if (String.IsNullOrEmpty(Group.Name))
+                        throw new DomainException(ErrorMessages.RequiredValuesNotProvided);
+
+                    existingGroup.Name = Group.Name;
+                    existingGroup.Description = Group.Description;
+                    _context.SaveChanges();
+
+                    ViewBag.Message = "Success";
+
+                }
+                return View(Group);
+
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("Error", ex.Message);
+                return View(Group);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+        public IActionResult AddGroupAdmin(Guid Id)
+        {
+            try
+            {
+
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+
+                var existingGroupUser = _GroupStore.GetGroupMemberById(Id);
+
+                var existingGroup = _GroupStore.GetGroupById(existingGroupUser.GroupId);
+                if (CurrentUser.Id.Equals(existingGroup.UserId) is false)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var GroupMemberDTO = new GroupMemberDTO()
+                {
+                    Id = existingGroupUser.Id,
+                    Username = existingGroupUser.Username,
+                    Type = existingGroupUser.Type,
+                    GroupId = existingGroupUser.GroupId,
+                    UserId = existingGroupUser.UserId
+                };
+                return View(GroupMemberDTO);
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("Error", ex.Message);
+                return View();
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+        public IActionResult ConfirmGroupAdmin(Guid Id)
+        {
+            try
+            {
+                var existingGroupUser = _GroupStore.GetGroupMemberById(Id);
+                existingGroupUser.Type = GroupUserType.Admin;
+                var GroupID = existingGroupUser.GroupId;
+                _context.SaveChanges();
+                return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
+
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+        }
+
+
+        public IActionResult RevokeGroupAdmin(Guid Id)
+        {
+            try
+            {
+
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+
+                var existingGroupUser = _GroupStore.GetGroupMemberById(Id);
+
+                var existingGroup = _GroupStore.GetGroupById(existingGroupUser.GroupId);
+                if (CurrentUser.Id.Equals(existingGroup.UserId) is false)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var GroupMemberDTO = new GroupMemberDTO()
+                {
+                    Id = existingGroupUser.Id,
+                    Username = existingGroupUser.Username,
+                    Type = existingGroupUser.Type,
+                    GroupId = existingGroupUser.GroupId,
+                    UserId = existingGroupUser.UserId
+                };
+                return View(GroupMemberDTO);
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("Error", ex.Message);
+                return View();
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+        public IActionResult ConfirmRevoke(Guid Id)
+        {
+            try
+            {
+                var existingGroupUser = _GroupStore.GetGroupMemberById(Id);
+                existingGroupUser.Type = GroupUserType.Member;
+                var GroupID = existingGroupUser.GroupId;
+                _context.SaveChanges();
+                return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
+
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+        }
+
+
+
+        public IActionResult SendRequest(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+                var existingGroup = _GroupStore.GetGroupById(Id);
+                if (existingGroup is null)
+                    throw new DomainException(ErrorMessages.GroupDoesNotExist);
+
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+
+                var groupMembers = _GroupStore.GetGroupMembers(Id);
+                var CurrentUserAsMember = groupMembers.FirstOrDefault(x => x.UserId == CurrentUser.Id);
+                if (CurrentUserAsMember != null)
+                    throw new DomainException(ErrorMessages.GroupUserExists);
+
+                return View(new GroupDetailsDTO()
+                {
+                    Id = existingGroup.Id,
+                    Name = existingGroup.Name,
+                    Description = existingGroup.Description,
+                    CurrentUsername = CurrentUser.UserName
+                });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.GroupDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+                if (ex.Message.Equals(ErrorMessages.GroupUserExists))
+                    return RedirectToAction("AlreadyExists");
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
+
+        }
+        [HttpPost]
+        public IActionResult ConfirmSend(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingGroup = _GroupStore.GetGroupById(Id);
+                var Requestor = new GroupRequestUser()
+                {
+                    Username = CurrentUser.UserName,
+                    UserId = CurrentUser.Id,
+                };
+                _GroupRequestStore.NewRequestUser(Requestor);
+
+                var Request = new GroupRequest()
+                {
+                    GroupId = Id,
+                    RequestDate = DateTime.Now,
+                    RequestUserId = Requestor.Id
+                };
+                _GroupRequestStore.SendRequest(Request);
+
+                return RedirectToAction("GroupDetails", "Groups", new { id = Request.GroupId });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.GroupDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+                if (ex.Message.Equals(ErrorMessages.GroupUserExists))
+                    return RedirectToAction("AlreadyExists");
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+        public IActionResult AcceptRequest(Guid Id)
+        {
+
+            try
+            {
+                var existingRequest = _GroupRequestStore.GetGroupRequest(Id);
+                if (existingRequest is null)
+                    throw new DomainException(ErrorMessages.RequestDoesNotExist);
+
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+                var GroupOwner = _GroupStore.GetGroupOwner(existingRequest.GroupId);
+                if (GroupOwner.UserId != CurrentUser.Id)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+
+                var existingRequestUser = _GroupRequestStore.GetGroupRequestUser(existingRequest.RequestUserId);
+                var GroupUser = new GroupUser()
+                {
+                    Username = existingRequestUser.Username,
+                    UserId = existingRequestUser.UserId,
+                    GroupId = existingRequest.GroupId,
+                    Type = GroupUserType.Member
+                };
+                var GroupID = GroupOwner.GroupId;
+
+                _GroupStore.CreateGroupUser(GroupUser);
+                _GroupRequestStore.DeleteRequest(existingRequest.Id);
+                _GroupRequestStore.DeleteRequestUser(existingRequestUser.Id);
+                return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.RequestDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+
+        public IActionResult PendingRequests(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+                var existingGroup = _GroupStore.GetGroupById(Id);
+                if (existingGroup is null)
+                    throw new DomainException(ErrorMessages.GroupDoesNotExist);
+
+                var GroupOwner = _GroupStore.GetGroupOwner(existingGroup.Id);
+                if (GroupOwner.UserId != CurrentUser.Id)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var GroupRequests = _GroupRequestStore.GetGroupRequestsOfGroup(existingGroup.Id);
+
+                var GroupRequestViewModel = new GroupRequestsViewModel()
+                {
+                    GroupOwner = GroupOwner.Username,
+                    OwnerIdentityUserID = GroupOwner.UserId,
+                    GroupID = existingGroup.Id,
+                    requests = new List<GroupRequestDTO>()
+                };
+                foreach (var Request in GroupRequests)
+                {
+                    var RequestUser = _GroupRequestStore.GetGroupRequestUser(Request.RequestUserId);
+                    var GroupRequestDTO = new GroupRequestDTO()
+                    {
+                        Id = Request.Id,
+                        Username = RequestUser.Username,
+                        RequestDate = Request.RequestDate,
+                        Pending = Request.Pending
+                    };
+                    GroupRequestViewModel.requests.Add(GroupRequestDTO);
+                }
+
+                return View(GroupRequestViewModel);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.GroupDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
             }
             catch (Exception ex)
             {

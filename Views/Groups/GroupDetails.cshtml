@@ -31,8 +31,43 @@
 
                          asp-route-id="@Model.Id">
                           Edit Group
+                </a>
+                <a class="btn btn-primary btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="PendingRequests"
+
+                         asp-route-id="@Model.Id">
+                          Member Requests
                 </a><br></br>
 }
+else
+{
+
+  @if(!Model.PendingRequest  && !Model.ExistingMember)
+  {
+      <a class="btn btn-success btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="SendRequest"
+
+                         asp-route-id="@Model.Id">
+                          Join Group
+                </a><br></br>
+  }
+  else if(Model.PendingRequest)
+  {
+    <p>Awaiting request response</p>
+  }
+  else if(Model.ExistingMember)
+  {
+    <p>You are a member of this group</p>
+  }
+}
+
+
+
+
 
 
 <div class="card">

@@ -45,6 +45,7 @@ namespace FruityNET
             services.AddScoped<ICommentStore, CommentStore>();
             services.AddScoped<INotificationBox, NotificationBoxStore>();
             services.AddScoped<IGroupStore, GroupStore>();
+            services.AddScoped<IGroupRequestStore, GroupRequestStore>();
             services.AddSingleton<CurrentPostDTO>();
             services.ConfigureApplicationCookie(options =>
             {

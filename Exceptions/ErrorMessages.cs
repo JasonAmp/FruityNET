@@ -33,6 +33,8 @@ namespace FruityNET.Exceptions
         #region Group
         public const string GroupDoesNotExist = "Group Does Not Exist.";
         public const string GroupUserExists = "User is already part of Group.";
+        public const string RequestDoesNotExist = "Request Does Not Exist.";
+
 
         #endregion
     }

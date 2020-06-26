@@ -26,5 +26,7 @@ namespace FruityNET.DTOs
         public double ElapsedHour { get; set; }
         public double ElapsedMinute { get; set; }
 
+        public double ElapsedDay { get; set; }
+
     }
 }
