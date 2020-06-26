@@ -20551,6 +20551,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/PendingRequests.cshtml",
+      "TargetPath": "Views\\Groups\\PendingRequests.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Posts/Edit.cshtml",
       "TargetPath": "Views\\Posts\\Edit.cshtml",
       "FileKind": "mvc"
@@ -20611,6 +20616,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/AddGroupAdmin.cshtml",
+      "TargetPath": "Views\\Groups\\AddGroupAdmin.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/UserProfile.cshtml",
       "TargetPath": "Views\\Accounts\\UserProfile.cshtml",
       "FileKind": "mvc"
@@ -20631,6 +20641,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/ResetPassword.cshtml",
+      "TargetPath": "Views\\Accounts\\ResetPassword.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/SearchGroup.cshtml",
       "TargetPath": "Views\\Groups\\SearchGroup.cshtml",
       "FileKind": "mvc"
@@ -20646,6 +20661,16 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/SendRequest.cshtml",
+      "TargetPath": "Views\\Groups\\SendRequest.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/AlreadyExists.cshtml",
+      "TargetPath": "Views\\Groups\\AlreadyExists.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Shared/_LoginPartial.cshtml",
       "TargetPath": "Views\\Shared\\_LoginPartial.cshtml",
       "FileKind": "mvc"
@@ -20656,8 +20681,18 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/RevokeGroupAdmin.cshtml",
+      "TargetPath": "Views\\Groups\\RevokeGroupAdmin.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/AcceptRequest.cshtml",
       "TargetPath": "Views\\FriendList\\AcceptRequest.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/Edit.cshtml",
+      "TargetPath": "Views\\Groups\\Edit.cshtml",
       "FileKind": "mvc"
     },
     {
