@@ -517,12 +517,19 @@ namespace FruityNET.Controllers
         {
             try
             {
+                var currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
 
 
                 var existingAccount = _userStore.GetById(Id);
                 if (existingAccount is null || existingAccount.AccountStatus.Equals(Status.Suspended)
                 || existingAccount.AccountStatus.Equals(Status.Inactive))
                     throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                if (existingAccount.UserId.Equals(currentUser.Id))
+                    return RedirectToAction(ActionName.Profile);
 
                 var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
                 var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
@@ -558,6 +565,8 @@ namespace FruityNET.Controllers
             catch (DomainException ex)
             {
                 _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction(ActionName.Login);
                 return View(ActionName.NotFound);
 
             }

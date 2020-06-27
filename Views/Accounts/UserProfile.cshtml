@@ -27,8 +27,15 @@
 <h3>Groups</h3>
 <ul class="list-group">
   @foreach (var group in Model.Groups)
-      {
-        <li class="list-group-item">@group.Name</li>
+  {
+       <li class="list-group-item">
+          <a 
+                        asp-controller="Groups"
+                        asp-action="GroupDetails"
+                        asp-route-id="@group.Id">
+                       @group.Name
+          </a>
+       </li>
 
         
 
@@ -45,7 +52,16 @@
 <ul class="list-group">
   @foreach (var friend in Model.Friends)
   {
-    <li class="list-group-item">@friend.Username</li>
+    <li class="list-group-item"><a 
+                        asp-controller="Accounts"
+
+                        asp-action="UserProfile"
+
+                         asp-route-id="@friend.AccountId">
+                        
+                        @friend.Username
+
+                </a></li>
 
   }
   @if(Model.Friends.Count is 0)

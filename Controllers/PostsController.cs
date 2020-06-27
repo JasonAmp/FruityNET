@@ -147,6 +147,8 @@ namespace FruityNET.Controllers
                                 Content = post.Content,
                                 DatePosted = post.DatePosted,
                                 Username = friend.Username,
+                                UserId = FriendAccount.Id
+
                             };
                             postViewDTO.AllPosts.Add(PostDTO);
                         }
