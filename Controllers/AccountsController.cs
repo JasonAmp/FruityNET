@@ -297,6 +297,7 @@ namespace FruityNET.Controllers
 
                 var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
                 var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
+                var GroupsWithUser = GroupStore.GetGroupsWithUser(existingAccount.UserId);
 
                 var ProfileViewModel = new ProfileViewModel()
                 {
@@ -309,7 +310,8 @@ namespace FruityNET.Controllers
                     LastActive = existingAccount.LastActive,
                     JoinDate = existingAccount.DateJoined,
                     UserType = existingAccount.UserType,
-                    Groups = GroupStore.GetAllGroupsByUser(existingAccount.UserId)
+                    Groups = GroupsWithUser,
+                    UserId = _currentUser.Id
                 };
                 foreach (var friend in FriendUsers)
                 {
@@ -524,6 +526,7 @@ namespace FruityNET.Controllers
 
                 var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
                 var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
+                var GroupsWithUser = GroupStore.GetGroupsWithUser(existingAccount.UserId);
 
                 var ProfileViewModel = new ProfileViewModel
                 {
@@ -536,7 +539,7 @@ namespace FruityNET.Controllers
                     UserType = existingAccount.UserType,
                     LastActive = existingAccount.LastActive,
                     JoinDate = existingAccount.DateJoined,
-                    Groups = GroupStore.GetAllGroupsByUser(existingAccount.UserId)
+                    Groups = GroupsWithUser
                 };
                 foreach (var friend in FriendUsers)
                 {

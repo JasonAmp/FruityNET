@@ -23,7 +23,7 @@ namespace FruityNET.Models
         public Guid Id { get; set; }
         public string Groupname { get; set; }
         public Guid GroupId { get; set; }
-        public bool isPartOfGroup { get; set; }
-        public bool RequestIsPending { get; set; }
+        public string CreatedBy { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 }

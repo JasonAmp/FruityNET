@@ -22,7 +22,7 @@
   <div class="card-body" style="text-align: center;">
     <h4 class="card-title">
       @if(@request.Pending is true){<p style="text-align: center;">Pending</p>}</h4>
-    <p class="card-text" style="text-align: center;">@request.Username</p>
+    <p class="card-text" style="text-align: center;">@request.message</p>
     <a class="btn btn-success btn-sm"
                         asp-action="AcceptRequest"
                         asp-controller="FriendList"

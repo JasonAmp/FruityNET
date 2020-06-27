@@ -33,5 +33,7 @@ namespace FruityNET.DTOs
         public Guid RequestUserId { get; set; }
 
         public Guid FriendListId { get; set; }
+
+        public string message { get; set; }
     }
 }

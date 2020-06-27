@@ -15,7 +15,7 @@
 }
 
 <h4>Group Details</h4><br>
-@if(Model.GroupOwner.Equals(Model.CurrentUsername))
+@if(Model.GroupOwner.Equals(Model.CurrentUsername) || Model.Admin is true)
 {
   <a class="btn btn-primary btn-sm"
                         asp-controller="Groups"
@@ -25,6 +25,25 @@
                          asp-route-id="@Model.Id">
                         Add User To Group
                 </a> <a class="btn btn-primary btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="Edit"
+
+                         asp-route-id="@Model.Id">
+                          Edit Group
+                </a>
+                <a class="btn btn-primary btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="PendingRequests"
+
+                         asp-route-id="@Model.Id">
+                          Member Requests
+                </a><br></br>
+}
+else if(Model.Admin is true)
+{
+ <a class="btn btn-primary btn-sm"
                         asp-controller="Groups"
 
                         asp-action="Edit"

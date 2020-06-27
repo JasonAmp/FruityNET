@@ -23,7 +23,6 @@ namespace FruityNET.Controllers
         private readonly IUserStore _userStore;
         private readonly IGroupStore _GroupStore;
         private readonly IGroupRequestStore _GroupRequestStore;
-
         private readonly ILogger<GroupsController> _logger;
 
 
@@ -97,9 +96,6 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
             }
-
-
-
         }
 
         [HttpGet]
@@ -137,10 +133,12 @@ namespace FruityNET.Controllers
                     };
                     RequestDTOs.Add(GroupRequestDTO);
                 }
-                var CurrentUserAsRequestUser = RequestDTOs
-               .FirstOrDefault(x => x.Username == CurrentUser.UserName);
-                var CurrentUserAsMember = groupMembers
-                .FirstOrDefault(x => x.Username == CurrentUser.UserName);
+                var CurrentUserAsRequestUser = RequestDTOs.FirstOrDefault(x => x.Username == CurrentUser.UserName);
+                var CurrentUserAsMember = groupMembers.FirstOrDefault(x => x.Username == CurrentUser.UserName);
+
+                var GroupAdmin = _GroupStore.GetGroupMembers(Id)
+                .FirstOrDefault(x => x.Type.Equals(GroupUserType.Admin)
+                && x.UserId.Equals(CurrentUser.Id));
 
                 var GroupDetailsDTO = new GroupDetailsDTO()
                 {
@@ -152,7 +150,8 @@ namespace FruityNET.Controllers
                     CurrentUsername = CurrentUser.UserName,
                     GroupRequests = RequestDTOs,
                     PendingRequest = (CurrentUserAsRequestUser != null) ? true : false,
-                    ExistingMember = (CurrentUserAsMember != null) ? true : false
+                    ExistingMember = (CurrentUserAsMember != null) ? true : false,
+                    Admin = (GroupAdmin != null) ? true : false
                 };
                 foreach (var member in groupMembers)
                 {
@@ -180,8 +179,6 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
             }
-
-
         }
 
 
@@ -200,11 +197,7 @@ namespace FruityNET.Controllers
                 if (CurrentUser.Id.Equals(existingGroup.UserId) is false)
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
-
-
                 return View(new AddGroupUserDTO { Id = Id });
-
-
             }
             catch (ForbiddenException ex)
             {
@@ -286,8 +279,22 @@ namespace FruityNET.Controllers
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
-
-                return View(new SearchGroupViewModel());
+                var Groups = _GroupStore.GetAllGroup();
+                var GroupViewModels = new List<GroupResultViewModel>();
+                foreach (var group in Groups)
+                {
+                    GroupViewModels.Add(new GroupResultViewModel()
+                    {
+                        Groupname = group.Name,
+                        GroupId = group.Id,
+                        CreatedOn = group.CreationDate,
+                        CreatedBy = _GroupStore.GetGroupOwner(group.Id).Username
+                    });
+                }
+                return View(new SearchGroupViewModel()
+                {
+                    Groups = GroupViewModels
+                });
             }
             catch (DomainException ex)
             {
@@ -310,12 +317,17 @@ namespace FruityNET.Controllers
                     ViewBag.Message = "Group Does not Exist";
                 else
                 {
+                    var GroupViewModel = new List<GroupResultViewModel>();
+
                     var GroupResult = new GroupResultViewModel()
                     {
                         Groupname = existingGroup.Name,
                         GroupId = existingGroup.Id,
+                        CreatedOn = existingGroup.CreationDate,
+                        CreatedBy = _GroupStore.GetGroupOwner(existingGroup.Id).Username
                     };
-                    searchGroupViewModel.Groups.Add(GroupResult);
+                    GroupViewModel.Add(GroupResult);
+                    searchGroupViewModel.Groups = GroupViewModel;
                 }
             }
             return View(searchGroupViewModel);
@@ -336,24 +348,29 @@ namespace FruityNET.Controllers
                 var existingGroup = _GroupStore.GetGroupById(Id);
                 if (existingGroup is null)
                     throw new DomainException(ErrorMessages.GroupDoesNotExist);
+
+                if (!existingGroup.UserId.Equals(CurrentUser.Id))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
                 return View(existingGroup);
-
-
             }
             catch (DomainException ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.Login, ControllerName.Accounts);
             }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
             }
-
-
-
         }
+
         [HttpPost]
         public IActionResult Delete(Group group)
         {
@@ -454,7 +471,11 @@ namespace FruityNET.Controllers
 
 
                 var existingGroup = _GroupStore.GetGroupById(Id);
-                if (CurrentUser.Id.Equals(existingGroup.UserId) is false)
+
+                var Admin = _GroupStore.GetGroupMembers(existingGroup.Id)
+                .FirstOrDefault(x => x.Type.Equals(GroupUserType.Admin) && x.UserId.Equals(CurrentUser.Id));
+
+                if (!CurrentUser.Id.Equals(existingGroup.UserId) && Admin is null)
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
                 var editGroupDTO = new EditGroupDTO() { GroupID = new Guid(Id.ToString()) };
@@ -758,7 +779,11 @@ namespace FruityNET.Controllers
                     signInManager.SignOutAsync();
 
                 var GroupOwner = _GroupStore.GetGroupOwner(existingRequest.GroupId);
-                if (GroupOwner.UserId != CurrentUser.Id)
+                var GroupID = GroupOwner.GroupId;
+                var Admin = _GroupStore.GetGroupMembers(GroupID)
+               .FirstOrDefault(x => x.Type.Equals(GroupUserType.Admin) && x.UserId.Equals(CurrentUser.Id));
+
+                if (!CurrentUser.Id.Equals(GroupOwner.UserId) && Admin is null)
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
 
@@ -770,7 +795,6 @@ namespace FruityNET.Controllers
                     GroupId = existingRequest.GroupId,
                     Type = GroupUserType.Member
                 };
-                var GroupID = GroupOwner.GroupId;
 
                 _GroupStore.CreateGroupUser(GroupUser);
                 _GroupRequestStore.DeleteRequest(existingRequest.Id);
@@ -798,6 +822,62 @@ namespace FruityNET.Controllers
         }
 
 
+        public IActionResult DeclineRequest(Guid Id)
+        {
+
+            try
+            {
+                var existingRequest = _GroupRequestStore.GetGroupRequest(Id);
+                if (existingRequest is null)
+                    throw new DomainException(ErrorMessages.RequestDoesNotExist);
+
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+                var GroupOwner = _GroupStore.GetGroupOwner(existingRequest.GroupId);
+                var GroupID = GroupOwner.GroupId;
+                var Admin = _GroupStore.GetGroupMembers(GroupID)
+               .FirstOrDefault(x => x.Type.Equals(GroupUserType.Admin) && x.UserId.Equals(CurrentUser.Id));
+
+                if (!CurrentUser.Id.Equals(GroupOwner.UserId) && Admin is null)
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+
+                var existingRequestUser = _GroupRequestStore.GetGroupRequestUser(existingRequest.RequestUserId);
+
+                _GroupRequestStore.DeleteRequest(existingRequest.Id);
+                _GroupRequestStore.DeleteRequestUser(existingRequestUser.Id);
+                return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.RequestDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+
+
+
+
         public IActionResult PendingRequests(Guid Id)
         {
             try
@@ -815,7 +895,12 @@ namespace FruityNET.Controllers
                     throw new DomainException(ErrorMessages.GroupDoesNotExist);
 
                 var GroupOwner = _GroupStore.GetGroupOwner(existingGroup.Id);
-                if (GroupOwner.UserId != CurrentUser.Id)
+
+                var Admin = _GroupStore.GetGroupMembers(Id)
+                .FirstOrDefault(x => x.Type.Equals(GroupUserType.Admin)
+                && x.UserId.Equals(CurrentUser.Id));
+
+                if (!CurrentUser.Id.Equals(GroupOwner.UserId) && Admin is null)
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
                 var GroupRequests = _GroupRequestStore.GetGroupRequestsOfGroup(existingGroup.Id);
@@ -835,7 +920,9 @@ namespace FruityNET.Controllers
                         Id = Request.Id,
                         Username = RequestUser.Username,
                         RequestDate = Request.RequestDate,
-                        Pending = Request.Pending
+                        Pending = Request.Pending,
+                        Message = $"{RequestUser.Username} would like to join your group."
+
                     };
                     GroupRequestViewModel.requests.Add(GroupRequestDTO);
                 }
@@ -859,6 +946,77 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
             }
+        }
+
+        [HttpGet]
+        public IActionResult LeaveGroup(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+                var existingGroup = _GroupStore.GetGroupById(Id);
+                if (existingGroup is null)
+                    throw new DomainException(ErrorMessages.GroupDoesNotExist);
+
+                var existingGroupMember = _GroupStore.GetGroupMembers(Id)
+                .FirstOrDefault(x => x.UserId.Equals(CurrentUser.Id));
+
+                if (existingGroupMember is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
+
+                var GroupID = existingGroupMember.GroupId.ToString().Clone();
+
+
+                var GroupMemberDTO = new GroupMemberDTO()
+                {
+                    GroupId = existingGroup.Id,
+                    Id = existingGroupMember.Id,
+                    Username = existingGroupMember.Username
+                };
+                return View(GroupMemberDTO);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+        [HttpPost]
+        public IActionResult ConfirmLeave(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+
+                var existingGroup = _GroupStore.GetGroupById(Id);
+                var existingGroupMember = _GroupStore.GetGroupMembers(existingGroup.Id)
+                .FirstOrDefault(x => x.UserId.Equals(CurrentUser.Id));
+
+                _GroupStore.DeleteGroupUser(existingGroupMember);
+                return RedirectToAction(ActionName.Profile, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
         }
     }
 }

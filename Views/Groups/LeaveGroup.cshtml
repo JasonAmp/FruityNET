@@ -1,0 +1,33 @@
+@using FruityNET.DTOs
+
+
+
+
+@model GroupMemberDTO
+
+@{
+    ViewData["Title"] = "Leave Group";
+}
+
+
+    <div class="alert alert-danger">Are you sure you want to leave this Group?
+    </div>
+
+
+
+<form asp-action="ConfirmLeave" asp-route-id="@Model.GroupId" method="post" role="form">
+
+         
+                   
+                
+                
+                
+            <button type="submit" class="btn btn-danger">Leave Group</button> <a class="btn btn-default btn-sm"
+                        asp-controller="Groups"
+
+                        asp-action="GroupDetails"
+
+                         asp-route-id="@Model.GroupId">
+                        Back to Group
+                </a> <br>
+        </form>

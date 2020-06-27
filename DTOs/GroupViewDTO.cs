@@ -18,6 +18,7 @@ namespace FruityNET.DTOs
         public List<GroupRequestDTO> GroupRequests { get; set; }
         public bool ExistingMember { get; set; }
         public bool PendingRequest { get; set; }
+        public bool Admin { get; set; }
         public GroupDetailsDTO()
         {
             GroupMembers = new List<GroupMemberDTO>();
@@ -50,7 +51,7 @@ namespace FruityNET.DTOs
         public bool Pending { get; set; }
         public Guid RequestUserId { get; set; }
         public Guid GroupID { get; set; }
-
+        public string Message { get; set; }
         public DateTime RequestDate { get; set; }
     }
 

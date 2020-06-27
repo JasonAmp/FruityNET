@@ -13,16 +13,16 @@
 
 
 
-<h6 style="text-align: center;">Incoming Requests</h6>
+<h6 style="text-align: center;">New Requests for Approval</h6>
 @if(Model.requests.Count is 0)
-{<p style="text-align: center;">No Incoming Requests</p>}
+{<p style="text-align: center;">No requests at the moment</p>}
 @foreach (var request in Model.requests)
 {
     <div class="card">
   <div class="card-body" style="text-align: center;">
     <h4 class="card-title">
       @if(@request.Pending is true){<p style="text-align: center;">Pending</p>}</h4>
-    <p class="card-text" style="text-align: center;">@request.Username</p>
+    <p class="card-text" style="text-align: center;">@request.Message</p>
     <a class="btn btn-success btn-sm"
                         asp-action="AcceptRequest"
                         asp-controller="Groups"

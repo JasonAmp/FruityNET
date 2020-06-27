@@ -61,6 +61,11 @@ namespace FruityNET.EntityStore
             return _Context.Group.ToList().FindAll(x => x.UserId == UserId);
         }
 
+        public List<Group> GetAllGroup()
+        {
+            return _Context.Group.ToList();
+        }
+
         public Group GetGroupById(Guid Id)
         {
             return _Context.Group.Find(Id);
@@ -87,6 +92,21 @@ namespace FruityNET.EntityStore
         public GroupUser GetGroupMemberById(Guid Id)
         {
             return _Context.GroupUser.FirstOrDefault(x => x.Id == Id);
+        }
+
+        public List<Group> GetGroupsWithUser(string Id)
+        {
+            var groups = _Context.Group.ToList();
+            var groupsWithUser = new List<Group>();
+            foreach (var Group in groups)
+            {
+                var members = GetGroupMembers(Group.Id);
+                var userAsMember = members.FirstOrDefault(x => x.UserId.Equals(Id));
+                if (userAsMember != null)
+                    groupsWithUser.Add(Group);
+            }
+            return groupsWithUser;
+
         }
     }
 }

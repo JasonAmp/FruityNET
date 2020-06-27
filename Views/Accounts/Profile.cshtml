@@ -103,12 +103,25 @@ Admin Portal
                         asp-route-id="@group.Id">
                        @group.Name
           </a>
-          <a class="btn btn-danger btn-sm"
+          @if(group.UserId.Equals(Model.UserId))
+          { 
+            <a class="btn btn-danger btn-sm"
                         asp-controller="Groups"
                         asp-action="Delete"
                         asp-route-id="@group.Id">
                       Delete Group
           </a>
+          }
+          else
+          {
+            <a class="btn btn-primary btn-sm"
+                        asp-controller="Groups"
+                        asp-action="LeaveGroup"
+                        asp-route-id="@group.Id">
+                      Leave Group
+          </a>
+          }
+          
         </li>
 
         

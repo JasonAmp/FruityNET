@@ -104,7 +104,7 @@ namespace FruityNET.Controllers
                 };
                 var Notification = new Notification()
                 {
-                    Message = $"You have a Friend Invite from {RequestUser.Username}",
+                    Message = $"{RequestUser.Username} sent you a Friend Invite.",
                     NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingFriendList.UserId).Id,
                     RecieverUsername = _userStore.GetByIdentityUserId(existingFriendList.UserId).Username
                 };
@@ -150,7 +150,8 @@ namespace FruityNET.Controllers
                         RequestUserId = Request.RequestUserId,
                         FriendListId = Request.FriendListId,
                         Pending = Request.Pending,
-                        Username = RequestUser.Username
+                        Username = RequestUser.Username,
+                        message = $"{RequestUser.Username} would like to be your friend."
                     });
                 }
 

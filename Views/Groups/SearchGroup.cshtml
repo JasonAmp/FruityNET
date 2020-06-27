@@ -31,7 +31,7 @@
 
                 <div class="form-group >
                     
-                    <label asp-for="Groupname" style="text-align: center;">Search for a Group
+                    <label asp-for="Groupname" style="text-align: center;">Filter Group by Name
                     </label>
                     <input asp-for="Groupname" type="text" placeholder="Group Name"  />
                                       <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
@@ -44,32 +44,27 @@
         </form>
 </div><br>
 
-    @foreach (var result in Model.Groups)
-    {
+  
       
         <table class="table table-hover">
   <thead>
     <tr>
-      <th scope="col">Result</th>
       <th scope="col">Groupname </th>
       <th scope="col">Created By </th>
       <th scope="col">Created On </th>
       <th scope="col"> </th>
-      <th scope="col"> </th>
-            <th scope="col"> </th>
-             @if(result.RequestIsPending){<th></th>}
-
+     
 
 
     </tr>
   </thead>
     <tbody>
-        <tr class="table-success">
-      <th scope="row">Success</th>
+        @foreach (var result in Model.Groups)
+    {
+        <tr class="table-info">
       <td>@result.Groupname</td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>@result.CreatedBy</td>
+      <td>@result.CreatedOn</td>
       
       <td> 
        
@@ -93,11 +88,12 @@
         
 
     </tr>
+    }
     </tbody>
         </table>
      
 
 
     
-}
+
 

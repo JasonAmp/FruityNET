@@ -19,6 +19,9 @@ namespace FruityNET.IEntityStore
 
         GroupOwner GetGroupOwner(Guid GroupId);
         GroupUser GetGroupMemberById(Guid Id);
+        List<Group> GetGroupsWithUser(string UserId);
+
+        List<Group> GetAllGroup();
     }
 
 }
