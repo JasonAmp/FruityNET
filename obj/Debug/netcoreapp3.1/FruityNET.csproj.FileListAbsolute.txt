@@ -145,3 +145,4 @@
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Groups/AlreadyExists.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Groups/PendingRequests.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Groups/SendRequest.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Groups/LeaveGroup.cshtml.g.cs

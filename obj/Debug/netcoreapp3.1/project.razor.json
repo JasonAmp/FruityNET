@@ -20696,6 +20696,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/LeaveGroup.cshtml",
+      "TargetPath": "Views\\Groups\\LeaveGroup.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/AddGroupMember.cshtml",
       "TargetPath": "Views\\Groups\\AddGroupMember.cshtml",
       "FileKind": "mvc"
