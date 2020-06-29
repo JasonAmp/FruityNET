@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using FruityNET.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +14,8 @@ namespace FruityNET.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-        }
 
+        }
         public DbSet<Entities.Group> Group { get; set; }
         public DbSet<GroupUser> GroupUser { get; set; }
         public DbSet<Request> Request { get; set; }

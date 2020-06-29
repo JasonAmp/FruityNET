@@ -129,8 +129,13 @@ namespace FruityNET.Controllers
                 var friendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
                 friendList.Users = _FriendListStore.GetFriendsOfUser(friendList.Id);
 
+                var Notifications = _notificationBox.GetUserNotifications(existingAccount.Username);
+                var FriendRequests = _FriendListStore.GetIncomingFriendRequests(friendList.Id);
+
                 var postViewDTO = new PostViewDto
                 {
+                    FriendRequestCount = FriendRequests.Count,
+                    NotificationCount = Notifications.Count,
                     Permissions = existingAccount.UserType,
                     AllPosts = new List<PostDTO>()
                 };
@@ -148,8 +153,8 @@ namespace FruityNET.Controllers
                                 Content = post.Content,
                                 DatePosted = post.DatePosted,
                                 Username = friend.Username,
-                                UserId = FriendAccount.Id
-
+                                UserId = FriendAccount.Id,
+                                Role = FriendAccount.UserType
                             };
                             postViewDTO.AllPosts.Add(PostDTO);
                         }

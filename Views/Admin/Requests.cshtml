@@ -9,7 +9,7 @@
 }
 <h1 style="text-align: center;">Admin Approval</h1><br>
 
-   <table class="table table-hover table-dark">
+   <table class="table table-hover table-light">
   <thead>
     <tr>
       <th scope="col">Request Date</th>
@@ -24,9 +24,9 @@
 {
       <tbody>
       <td>@request.RequestDate</td>
-      <td>@request.UserId</td>
+      <td>@request.Username</td>
       <td> <a class="btn btn-success btn-sm"
-                        asp-action="Approve"
+                        asp-action="ApproveAdmin"
                         asp-route-id="@request.RequestId">
                        Approve
                 </a></td>
@@ -35,11 +35,12 @@
               
           
         
-              <a class="btn btn-danger btn-sm"
-                        asp-action="Reject"
-                        asp-route-id="@request.RequestId">
-                        Reject
-                </a>
+                <form asp-action="Reject" method="post"  asp-route-id="@request.RequestId" role="form">
+
+
+                
+            <button type="submit" class="btn btn-danger btn-sm">Reject</button>  <br>
+        </form>
           
           
          

@@ -117,7 +117,6 @@
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/SendFriendInvite.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/AcceptRequest.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/DeclineRequest.cshtml.g.cs
-/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/UnfriendUser.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Posts/Edit.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Accounts/Notifications.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Groups/AddGroup.cshtml.g.cs
@@ -146,3 +145,8 @@
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Groups/PendingRequests.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Groups/SendRequest.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Groups/LeaveGroup.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Posts/Delete.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/Unfriend.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Admin/Requests.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Admin/SendRequest.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Admin/ApproveAdmin.cshtml.g.cs

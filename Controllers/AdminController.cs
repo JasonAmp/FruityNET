@@ -31,7 +31,7 @@ namespace FruityNET.Controllers
 
 
         public AdminController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context, IAdminRequestStore _AdminRequestStore,
-         INotificationBox _notificationBox, ILogger<AccountsController> _logger)
+         INotificationBox _notificationBox, ILogger<AccountsController> _logger, IUserStore _userStore)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -39,6 +39,7 @@ namespace FruityNET.Controllers
             this._AdminRequestStore = _AdminRequestStore;
             this._logger = _logger;
             this._notificationBox = _notificationBox;
+            this._userStore = _userStore;
         }
 
 
@@ -51,15 +52,22 @@ namespace FruityNET.Controllers
                 if (CurrentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
+                var existingAccount = _userStore.GetByUsername(CurrentUser.UserName);
+
+
+                if (!existingAccount.UserType.Equals(UserType.SiteOwner))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
                 var AdminRequests = _AdminRequestStore.GetAll();
                 var AdminRequestModel = new AdminRequestsViewModel() { };
                 foreach (var Request in AdminRequests)
                 {
+                    var Requestor = _AdminRequestStore.GetUserById(Request.AdminRequestorId);
                     AdminRequestModel.AdminRequests.Add(new AdminRequestDTO()
                     {
                         RequestDate = Request.RequestDate,
                         RequestId = Request.Id,
-                        Username = Request.Username,
+                        Username = Requestor.Username,
 
                     });
                 }
@@ -70,7 +78,7 @@ namespace FruityNET.Controllers
             catch (ForbiddenException ex)
             {
                 _logger.LogError(ex.Message);
-                return RedirectToAction("NotAuthorized");
+                return RedirectToAction("NotAuthorized", "Accounts");
             }
             catch (DomainException ex)
             {
@@ -92,7 +100,6 @@ namespace FruityNET.Controllers
                 var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
                 if (CurrentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
-
 
 
                 return View();
@@ -119,13 +126,132 @@ namespace FruityNET.Controllers
         public IActionResult ConfirmSend()
         {
             var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+            var SiteOwner = _AdminRequestStore.GetSiteOwner();
+            var AdminRequestBox = _AdminRequestStore.GetAdminBox(SiteOwner.Id);
+            var RequestUser = new AdminRequestor()
+            {
+                Username = CurrentUser.UserName,
+                UserId = CurrentUser.Id,
+
+            };
+            _AdminRequestStore.AddRequestor(RequestUser);
             var Request = new AdminRequest()
             {
                 Username = CurrentUser.UserName,
-                RequestDate = DateTime.Now
+                RequestDate = DateTime.Now,
+                ApprovalBoxId = AdminRequestBox.Id,
+                AdminRequestorId = RequestUser.Id
             };
+            _AdminRequestStore.AddRequest(Request);
+            _context.SaveChanges();
+            return RedirectToAction(ActionName.Profile, ControllerName.Accounts);
+        }
 
-            return View();
+
+
+
+        [HttpGet]
+        public IActionResult ApproveAdmin(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var CurrentUserAccount = _userStore.GetByUsername(CurrentUser.UserName);
+                if (!CurrentUserAccount.UserType.Equals(UserType.SiteOwner))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var existingRequest = _AdminRequestStore.GetRequestById(Id);
+                var existingRequestUser = _AdminRequestStore.GetUserById(existingRequest.AdminRequestorId);
+                var AdminRequestDTO = new AdminRequestDTO()
+                {
+                    RequestId = existingRequest.Id,
+                    RequestDate = existingRequest.RequestDate,
+                    RequestorID = existingRequestUser.Id,
+                    Username = existingRequestUser.Username,
+                    AccountID = existingRequestUser.UserId
+                };
+                return View(AdminRequestDTO);
+
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("Login", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError", "Accounts");
+            }
+        }
+
+        [HttpPost]
+        public IActionResult Confirm(Guid Id)
+        {
+            try
+            {
+                var existingRequest = _AdminRequestStore.GetRequestById(Id);
+                var existingRequestUser = _AdminRequestStore.GetUserById(existingRequest.AdminRequestorId);
+                var existingAccount = _userStore.GetByIdentityUserId(existingRequestUser.UserId);
+                existingAccount.UserType = UserType.Admin;
+                _context.SaveChanges();
+                _AdminRequestStore.DeleteRequestor(existingRequestUser.Id);
+                return RedirectToAction("AdminPortal", "Accounts");
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError", "Accounts");
+            }
+        }
+
+        [HttpPost]
+        public IActionResult Reject(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var CurrentUserAccount = _userStore.GetByUsername(CurrentUser.UserName);
+                if (!CurrentUserAccount.UserType.Equals(UserType.SiteOwner))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var existingRequest = _AdminRequestStore.GetRequestById(Id);
+                var existingRequestUser = _AdminRequestStore.GetUserById(existingRequest.AdminRequestorId);
+                _AdminRequestStore.DeleteRequestor(existingRequestUser.Id);
+
+                _context.SaveChanges();
+                return RedirectToAction("Requests");
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("NotAuthorized");
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("Login", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError", "Accounts");
+            }
+
+
         }
 
 

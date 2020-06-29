@@ -16,6 +16,19 @@ namespace FruityNET.EntityStore
         {
             this._Context = _Context;
         }
+
+        public AdminRequest AddRequest(AdminRequest adminRequest)
+        {
+            _Context.AdminRequest.Add(adminRequest);
+            return adminRequest;
+        }
+
+        public AdminRequestor AddRequestor(AdminRequestor adminRequestor)
+        {
+            _Context.AdminRequestor.Add(adminRequestor);
+            return adminRequestor;
+        }
+
         public UserAccount ApproveAdmin(UserAccount user)
         {
             user.UserType = UserType.Admin;
@@ -39,6 +52,11 @@ namespace FruityNET.EntityStore
             return existingRequestor;
         }
 
+        public AdminApprovalBox GetAdminBox(Guid SiteOwnerID)
+        {
+            return _Context.AdminApproval.FirstOrDefault(x => x.SiteOwnerId.Equals(SiteOwnerID));
+        }
+
         public List<AdminRequest> GetAll()
         {
             return _Context.AdminRequest.ToList();
@@ -48,6 +66,11 @@ namespace FruityNET.EntityStore
         {
             var Request = _Context.AdminRequest.Find(RequestID);
             return Request;
+        }
+
+        public SiteOwner GetSiteOwner()
+        {
+            return _Context.SiteOwner.FirstOrDefault();
         }
 
         public AdminRequestor GetUserById(Guid RequestorID)

@@ -32,9 +32,12 @@ namespace FruityNET.Controllers
         private readonly IGroupStore GroupStore;
         private readonly ILogger<AccountsController> _logger;
 
+        private readonly IAdminRequestStore _AdminRequestStore;
+
+
         public AccountsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
         IUserStore _userStore, IFriendsListStore _FriendListStore, IRequestStore _RequestStore, INotificationBox _notificationBox,
-        IGroupStore GroupStore, ILogger<AccountsController> _logger)
+        IGroupStore GroupStore, ILogger<AccountsController> _logger, IAdminRequestStore _AdminRequestStore)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -45,6 +48,7 @@ namespace FruityNET.Controllers
             this._notificationBox = _notificationBox;
             this.GroupStore = GroupStore;
             this._logger = _logger;
+            this._AdminRequestStore = _AdminRequestStore;
         }
 
         [HttpGet]
@@ -64,9 +68,10 @@ namespace FruityNET.Controllers
                 if (existingAccount.UserType != UserType.Admin && existingAccount.UserType != UserType.SiteOwner)
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
-
+                var AdminRequests = _AdminRequestStore.GetAll();
                 var AdminPortalDTO = new AdminPortalViewDTO()
                 {
+                    RequestCount = AdminRequests.Count,
                     UserId = CurrentUser.Id,
                     Accounts = new List<AccountDTO>()
                 };

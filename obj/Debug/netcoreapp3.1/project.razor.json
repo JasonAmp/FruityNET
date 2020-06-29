@@ -20536,6 +20536,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/Unfriend.cshtml",
+      "TargetPath": "Views\\FriendList\\Unfriend.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Home/Privacy.cshtml",
       "TargetPath": "Views\\Home\\Privacy.cshtml",
       "FileKind": "mvc"
@@ -20598,6 +20603,16 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Posts/Post.cshtml",
       "TargetPath": "Views\\Posts\\Post.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Posts/Delete.cshtml",
+      "TargetPath": "Views\\Posts\\Delete.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Admin/ApproveAdmin.cshtml",
+      "TargetPath": "Views\\Admin\\ApproveAdmin.cshtml",
       "FileKind": "mvc"
     },
     {
@@ -20711,6 +20726,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Admin/Requests.cshtml",
+      "TargetPath": "Views\\Admin\\Requests.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/SignOut.cshtml",
       "TargetPath": "Views\\Accounts\\SignOut.cshtml",
       "FileKind": "mvc"
@@ -20718,6 +20738,11 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Posts/AddCommentToPost.cshtml",
       "TargetPath": "Views\\Posts\\AddCommentToPost.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Admin/SendRequest.cshtml",
+      "TargetPath": "Views\\Admin\\SendRequest.cshtml",
       "FileKind": "mvc"
     },
     {
@@ -20733,11 +20758,6 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/Register.cshtml",
       "TargetPath": "Views\\Accounts\\Register.cshtml",
-      "FileKind": "mvc"
-    },
-    {
-      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/UnfriendUser.cshtml",
-      "TargetPath": "Views\\FriendList\\UnfriendUser.cshtml",
       "FileKind": "mvc"
     },
     {

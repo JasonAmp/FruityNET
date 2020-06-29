@@ -10,11 +10,13 @@
 <a class="btn btn-primary btn-sm"
                         asp-controller="Admin"
                         asp-action="Requests">
-                        Requests
+                        @if(Model.RequestCount != 0)
+                        {<span class="badge badge-light">@Model.RequestCount</span>}
+                         Admin Requests 
                 </a>
 <h1 style="text-align: center;">Manage Users</h1><br>
 
-   <table class="table table-hover table-dark">
+   <table class="table table-hover table-light">
   <thead>
     <tr>
       <th scope="col">Username</th>
@@ -44,7 +46,7 @@
                <a class="btn btn-info btn-sm"
                         asp-action="GrantAdminAccess"
                         asp-route-id="@account.Id">
-                        Grant Admin Acesss
+                        Grant Admin 
                 </a>
           }
           else if(account.UserType == UserType.Admin && account.AccountStatus.Equals(Status.Active))
@@ -52,7 +54,7 @@
               <a class="btn btn-danger btn-sm"
                         asp-action="RevokeAdminAccess"
                         asp-route-id="@account.Id">
-                        Revoke Admin Acesss
+                        Revoke Admin 
                 </a>
           } 
           

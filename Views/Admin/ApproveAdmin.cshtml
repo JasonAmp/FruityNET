@@ -1,0 +1,21 @@
+@using FruityNET.DTOs
+
+@model AdminRequestDTO
+
+@{
+    ViewData["Title"] = "Approve Admin";
+}
+
+
+            <div class="alert alert-info">Are you sure you want to approve User to be Admin?
+    </div>
+        <h4>Approve Admin</h4>
+
+
+
+        <form asp-action="Confirm" method="post"  asp-route-id="@Model.RequestId" role="form">
+
+
+                
+            <button type="submit" class="btn btn-secondary">Approve</button>  <br>
+        </form>

@@ -8,6 +8,9 @@ namespace FruityNET.DTOs
     public class PostViewDto
     {
         public UserType Permissions { get; set; }
+        public int NotificationCount { get; set; }
+        public int FriendRequestCount { get; set; }
+
         public List<PostDTO> AllPosts { get; set; }
 
     }
@@ -19,6 +22,7 @@ namespace FruityNET.DTOs
         public DateTime DatePosted { get; set; }
         public Guid UserId { get; set; }
         public string IdentityId { get; set; }
+        public UserType Role { get; set; }
 
     }
 
