@@ -1,0 +1,31 @@
+
+
+@using FruityNET.Entities
+@model FriendUser
+
+
+@{
+    ViewData["Title"] = "Unfriend?";
+}
+
+
+
+
+         <div class="alert alert-danger">Are you sure you want to unfriend  "@Model.Username" ?
+                
+    </div>
+
+
+
+
+        <form asp-action="Unfriend" method="post" role="form">
+
+
+
+                
+            <button type="submit" class="btn btn-secondary"> Confirm </button><a class="btn btn-default btn-sm"
+                        asp-action="Profile"
+                        asp-controller="Accounts">
+                        Cancel
+                </a><br>
+        </form>

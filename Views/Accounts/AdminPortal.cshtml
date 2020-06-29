@@ -7,9 +7,14 @@
 @{
     ViewData["Title"] = "Admin Portal";
 }
+<a class="btn btn-primary btn-sm"
+                        asp-controller="Admin"
+                        asp-action="Requests">
+                        Requests
+                </a>
 <h1 style="text-align: center;">Manage Users</h1><br>
 
-   <table class="table table-hover">
+   <table class="table table-hover table-dark">
   <thead>
     <tr>
       <th scope="col">Username</th>

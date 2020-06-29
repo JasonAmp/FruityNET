@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using FruityNET.ParameterStrings;
 using FruityNET.Exceptions;
 using System.Collections.Generic;
+using static System.Net.WebRequestMethods;
+using System.Net;
 
 namespace FruityNET.Controllers
 {
@@ -68,6 +70,8 @@ namespace FruityNET.Controllers
                         CreationDate = DateTime.Now
                     };
                     _GroupStore.CreateGroup(Group);
+                    _logger.LogInformation("Success: " + Group.Id.ToString() + " " + "Group Name: " + Group.Name);
+
                     var GroupOwner = new GroupOwner()
                     {
                         UserId = CurrentUser.Id,
@@ -82,7 +86,7 @@ namespace FruityNET.Controllers
                     };
                     _GroupStore.CreateGroupOwner(GroupOwner);
                     _GroupStore.CreateGroupUser(GroupUser);
-                    return RedirectToAction("Profile", "Accounts");
+                    return RedirectToAction("Profile", "Accounts", HttpStatusCode.OK);
                 }
                 return View(AddGroupDTO);
             }

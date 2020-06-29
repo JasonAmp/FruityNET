@@ -296,30 +296,64 @@ namespace FruityNET.Controllers
 
 
         [HttpGet]
-        public IActionResult UnfriendUser(Guid Id)
+        public IActionResult Unfriend(Guid Id)
         {
-            var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-            if (_currentUser is null)
-                return RedirectToAction("Login", "Accounts");
-            var FriendsListOfFriend = _FriendListStore.GetFriendListOfUser(_FriendListStore.GetFriendById(Id).UserId);
-            var FriendUser = _FriendListStore.GetFriendById(Id);
-            var CurrentUserAsFriendUser = _FriendListStore.GetFriendsOfUser(FriendsListOfFriend.Id)
-            .FirstOrDefault(x => x.UserId == _currentUser.Id);
+            try
+            {
+                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (_currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+                var existingFriend = _FriendListStore.GetFriendById(Id);
+                if (existingFriend is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
 
-            _userStore.GetByIdentityUserId(_context.Users.Find(userManager.GetUserId(User)).Id).FriendList.Remove(FriendUser);
-            _userStore.GetByIdentityUserId(FriendUser.UserId).FriendList.Remove(CurrentUserAsFriendUser);
+                return View(existingFriend);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction("Login", "Accounts");
 
-            _FriendListStore.Unfriend(FriendUser.Id);
-            _FriendListStore.Unfriend(CurrentUserAsFriendUser.Id);
+                return RedirectToAction("NotFound", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
 
-            return View(FriendUser);
+
+
         }
 
 
         [HttpPost]
-        public IActionResult UnfriendUser()
+        public IActionResult Unfriend(FriendUser Friend)
         {
-            return RedirectToAction("Profile", "Accounts");
+            try
+            {
+                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+
+                var FriendsListOfFriend = _FriendListStore.GetFriendListOfUser(_FriendListStore.GetFriendById(Friend.Id).UserId);
+                var FriendUser = _FriendListStore.GetFriendById(Friend.Id);
+                var CurrentUserAsFriendUser = _FriendListStore.GetFriendsOfUser(FriendsListOfFriend.Id)
+                .FirstOrDefault(x => x.UserId == _currentUser.Id);
+
+                _userStore.GetByIdentityUserId(_context.Users.Find(userManager.GetUserId(User)).Id).FriendList.Remove(FriendUser);
+                _userStore.GetByIdentityUserId(FriendUser.UserId).FriendList.Remove(CurrentUserAsFriendUser);
+
+                _FriendListStore.Unfriend(FriendUser.Id);
+                _FriendListStore.Unfriend(CurrentUserAsFriendUser.Id);
+                return RedirectToAction("Profile", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+
+
 
         }
 

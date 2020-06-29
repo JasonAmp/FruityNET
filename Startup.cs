@@ -43,6 +43,7 @@ namespace FruityNET
             services.AddScoped<IFriendsListStore, FriendListStore>();
             services.AddScoped<IRequestStore, RequestStore>();
             services.AddScoped<ICommentStore, CommentStore>();
+            services.AddScoped<IAdminRequestStore, AdminRequestStore>();
             services.AddScoped<INotificationBox, NotificationBoxStore>();
             services.AddScoped<IGroupStore, GroupStore>();
             services.AddScoped<IGroupRequestStore, GroupRequestStore>();

@@ -13,7 +13,7 @@
 @model SearchUserDTO
 
 @{
-    ViewData["Title"] = "Search User";
+    ViewData["Title"] = "Community";
 }
 
 
@@ -26,13 +26,13 @@
 
 <br>
     <div class="jumbotron">
-        <h4 style="text-align: center;">User Search</h4><br>
+        <h4 style="text-align: center;">Community</h4><br>
 
 
          <form asp-action="Search" method="post" role="form" style="text-align: center;">
              <div class="form-group >
                     
-                   <label asp-for="Username">Search for User
+                   <label asp-for="Username">Filter by Username
                     </label>
                     <input asp-for="Username" type="text" placeholder="Username"  />
                                       <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
@@ -42,30 +42,29 @@
             </form></div>
 <br>
 
-@if(Model.Username != null)
-{
-    @foreach (var result in Model.Users)
-    {
-      
+
+  
         <table class="table table-hover">
   <thead>
     <tr>
-      <th scope="col">Result</th>
       <th scope="col">Username </th>
       <th scope="col">First Name </th>
       <th scope="col">Last Name </th>
       <th scope="col">Role </th>
       <th scope="col"> </th>
             <th scope="col"> </th>
-             @if(result.RequestIsPending){<th></th>}
+            
 
 
 
     </tr>
   </thead>
     <tbody>
-        <tr class="table-success">
-      <th scope="row">Success</th>
+          @foreach (var result in Model.Users)
+    {
+        <tr class="table-secondary">
+            
+      
       <td>@result.Username</td>
       <td>@result.Firstname</td>
       <td>@result.Lastname</td>
@@ -73,7 +72,7 @@
       <td> 
         @if(result.UserId == UserManager.GetUserId(User))
         {
-            <a class="btn btn-primary btn-sm"
+            <a class="btn btn-success btn-sm"
                         asp-action="Profile"
                         >
                         Your Profile
@@ -122,13 +121,14 @@
         <td></td>
           
         
-
+    
     </tr>
+    }
     </tbody>
         </table>
      
 
 
-    }
-}
+    
+
 

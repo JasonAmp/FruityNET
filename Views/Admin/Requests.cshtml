@@ -1,0 +1,53 @@
+@using FruityNET.Models
+@using FruityNET.Enums
+
+@model AdminRequestsViewModel
+
+
+@{
+    ViewData["Title"] = "Approve Admin";
+}
+<h1 style="text-align: center;">Admin Approval</h1><br>
+
+   <table class="table table-hover table-dark">
+  <thead>
+    <tr>
+      <th scope="col">Request Date</th>
+      <th scope="col">Username</th>
+      <th scope="col"> </th>
+      <th scope="col"> </th>
+      
+    </tr>
+  </thead>
+  
+        @foreach (var request in Model.AdminRequests)
+{
+      <tbody>
+      <td>@request.RequestDate</td>
+      <td>@request.UserId</td>
+      <td> <a class="btn btn-success btn-sm"
+                        asp-action="Approve"
+                        asp-route-id="@request.RequestId">
+                       Approve
+                </a></td>
+      <td>
+          
+              
+          
+        
+              <a class="btn btn-danger btn-sm"
+                        asp-action="Reject"
+                        asp-route-id="@request.RequestId">
+                        Reject
+                </a>
+          
+          
+         
+      </td>
+     
+          </tbody>
+
+      }
+        </table>
+   
+     

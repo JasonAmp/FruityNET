@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using FruityNET.ParameterStrings;
 using FruityNET.Enums;
+using FruityNET.Exceptions;
 
 namespace FruityNET.Controllers
 {
@@ -293,7 +294,49 @@ namespace FruityNET.Controllers
 
         }
 
+        [HttpGet]
         public IActionResult Delete(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+
+                var existingPost = _postStore.GetById(Id);
+                if (existingPost is null)
+                    throw new DomainException(ErrorMessages.PostDoesNotExist);
+
+                return View(existingPost);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.PostDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+
+            }
+
+
+        }
+
+        [HttpPost]
+        public IActionResult Delete(Post Post)
         {
             try
             {
@@ -303,9 +346,8 @@ namespace FruityNET.Controllers
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
 
-                var existingPost = _postStore.GetById(Id);
-                if (existingPost is null)
-                    return RedirectToAction("NotFound", "Accounts");
+                var existingPost = _postStore.GetById(Post.Id);
+
 
                 if (existingPost.UserId != CurrentUser.Id)
                 {

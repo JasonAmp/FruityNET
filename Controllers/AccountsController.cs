@@ -409,9 +409,6 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError);
             }
-
-
-
         }
 
 
@@ -428,16 +425,48 @@ namespace FruityNET.Controllers
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
 
-                return View(new SearchUserDTO());
+                var AllUsers = _userStore.GetAccounts();
+                var SearchUserDTO = new SearchUserDTO() { Users = new List<SearchUserResultDTO>() };
+                foreach (var user in AllUsers)
+                {
+                    var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
+                    var ResultFriendList = _FriendListStore.GetFriendListOfUser(user.UserId);
+                    var areFriends = _FriendListStore.IsFriendsOfUser(FriendList.Id, user.UserId);
+                    var ResultRequests = _RequestStore.PendingRequest(ResultFriendList.Id);
+                    var CurrentUserRequests = _RequestStore.PendingRequest(FriendList.Id);
+                    var SentByCurrent = ResultRequests.FirstOrDefault(x => x.Username == currentUser.UserName);
+                    var SentByResult = CurrentUserRequests.FirstOrDefault(x => x.Username == user.Username);
+
+                    if (user.AccountStatus.Equals(Status.Active))
+                    {
+                        SearchUserDTO.Users.Add(new SearchUserResultDTO()
+                        {
+                            Id = user.Id,
+                            Firstname = user.FirstName,
+                            Lastname = user.LastName,
+                            Username = user.Username,
+                            UserType = user.UserType,
+                            UserId = user.UserId,
+                            isFriendsOfCurrentUser = (areFriends is true) ? true : false,
+                            ResultUserFriendListID = ResultFriendList.Id,
+                            RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null))
+                        });
+                    }
+
+                }
+
+                return View(SearchUserDTO);
             }
             catch (DomainException ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.Login);
             }
-
-
-
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError);
+            }
         }
 
 
@@ -468,7 +497,7 @@ namespace FruityNET.Controllers
 
                     else
                     {
-
+                        searchUserDTO.Users = new List<SearchUserResultDTO>();
                         var existingAccount = _userStore.GetByIdentityUserId(currentUser.Id);
                         var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
                         var ResultFriendList = _FriendListStore.GetFriendListOfUser(ResultUser.UserId);
@@ -977,18 +1006,35 @@ namespace FruityNET.Controllers
         {
             try
             {
+                if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Email)
+                || string.IsNullOrWhiteSpace(model.Password) || string.IsNullOrWhiteSpace(model.ConfirmPassword))
+                    throw new DomainException(ErrorMessages.RequiredValuesNotProvided);
+
+                if (model.Password != model.ConfirmPassword)
+                    throw new DomainException(ErrorMessages.passwordConfirmationFail);
+
+
                 if (ModelState.IsValid)
                 {
                     var existingUser = userManager.Users.FirstOrDefault(x => x.UserName.Equals(model.UserName));
                     if (existingUser is null)
                         throw new DomainException(ErrorMessages.UserDoesNotExist);
+                    var existingAccount = _userStore.GetByIdentityUserId(existingUser.Id);
+                    if (!model.Email.Equals(existingAccount.Email))
+                        throw new DomainException(ErrorMessages.InvalidResetCredentials);
+
+                    if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                        throw new DomainException(ErrorMessages.AccountSuspended);
+
 
                     var passwordHasher = new PasswordHasher<User>();
                     var NewPasswordHash = passwordHasher.HashPassword(existingUser, model.Password);
                     existingUser.PasswordHash = NewPasswordHash;
                     _context.SaveChanges();
                     ViewBag.Message = "Success";
+
                 }
+
                 return View(model);
             }
             catch (DomainException ex)
@@ -997,6 +1043,7 @@ namespace FruityNET.Controllers
                 ModelState.AddModelError("Error", ex.Message);
                 return View(model);
             }
+
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);

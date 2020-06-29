@@ -27,7 +27,7 @@ namespace FruityNET.EntityStore
 
         public Post EditPost(EditPostDTO editPostDTO, Post post)
         {
-            post.Content = editPostDTO.Content;
+            post.Content = editPostDTO.Content + " " + "(Edited)";
             post.Id = editPostDTO.Id;
             _Context.SaveChanges();
             return post;
