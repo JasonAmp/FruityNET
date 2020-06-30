@@ -11,12 +11,12 @@
 @{
     ViewData["Title"] = "Profile";
 }
-@if(Model.UserType == UserType.Admin || Model.UserType == UserType.SiteOwner) 
+@if(@Model.NotificationCount != 0)
 {
-    <a  class="btn btn-primary btn-sm" asp-area="" asp-controller="Accounts" asp-action="AdminPortal" style="position: relative;"><i style="font-size:20px" class="fa">&#xf0ad;</i>
-Admin Portal
-</a><br>
-}<br>
+        <div class="alert alert-danger">You have @Model.NotificationCount notifications.
+    </div>
+}
+<br>
 
 <h4 >Your Profile</h4>
 
@@ -38,8 +38,14 @@ Admin Portal
 
   </ul>
   <div class="card-body">
-    <a  class="btn btn-primary btn-sm" asp-area="" asp-controller="Accounts" asp-action="Edit"><i style='font-size:14px' class='fas'>&#xf4ff;</i>
+    <a  class="btn btn-primary btn-sm" asp-area="" asp-controller="Accounts" asp-action="Edit"><i style='font-size:14px' class='fas'>&#xf4ff;</i> Edit
 </a>
+@if(Model.UserType == UserType.Admin || Model.UserType == UserType.SiteOwner) 
+{
+    <a  class="btn btn-primary btn-sm" asp-area="" asp-controller="Accounts" asp-action="AdminPortal" style="position: relative;"><i style="font-size:14px" class="fa">&#xf0ad;</i>
+Admin Portal
+</a>
+}
    
   </div>
 </div>
@@ -104,20 +110,20 @@ Admin Portal
           </a>
           @if(group.UserId.Equals(Model.UserId))
           { 
-            <a class="btn btn-danger btn-sm"
+            <a class="btn btn-secondary btn-sm"
                         asp-controller="Groups"
                         asp-action="Delete"
                         asp-route-id="@group.Id">
-                      Delete Group
+                     <i class='fas fa-trash' style='font-size:12px; color:black;'></i>  
           </a>
           }
           else
           {
-            <a class="btn btn-primary btn-sm"
+            <a class="btn btn-secondary btn-sm"
                         asp-controller="Groups"
                         asp-action="LeaveGroup"
                         asp-route-id="@group.Id">
-                      Leave Group
+                       <i class='fas fa-sign-out-alt' style='font-size:12px; color:black;'></i> Leave 
           </a>
           }
           

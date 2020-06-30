@@ -41,6 +41,7 @@ namespace FruityNET.Models
         public UserType UserType { get; set; }
         public List<FriendDTO> Friends { get; set; }
         public List<Group> Groups { get; set; }
+        public int NotificationCount { get; set; }
 
         public ProfileViewModel()
         {

@@ -34,6 +34,10 @@ namespace FruityNET.DTOs
         public string content { get; set; }
         public DateTime DatePosted { get; set; }
         public List<ViewCommentDTO> comments { get; set; }
+        public Guid PostId { get; set; }
+        public UserType Permissions { get; set; }
+        public string UserID { get; set; }
+        public UserType PostUserRole { get; set; }
 
     }
 }

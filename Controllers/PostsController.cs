@@ -229,7 +229,11 @@ namespace FruityNET.Controllers
                     Username = OwnerOfPost.Username,
                     content = post.Content,
                     DatePosted = post.DatePosted,
-                    comments = ListOfComments
+                    comments = ListOfComments,
+                    PostId = post.Id,
+                    Permissions = existingAccount.UserType,
+                    UserID = CurrentUser.Id,
+                    PostUserRole = OwnerOfPost.UserType
                 });
             }
             catch (Exception ex)

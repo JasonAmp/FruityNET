@@ -10,24 +10,24 @@
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {                       <li class="nav-item">
-                            <a class="nav-link text-grey" asp-area="" asp-controller="Posts" asp-action="AllPosts"> Timeline</a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Posts" asp-action="AllPosts"> Connect</a>
                         </li>
     
                         <li class="nav-item">
-                            <a class="nav-link text-grey" asp-area="" asp-controller="Accounts" asp-action="Notifications"> <i style="font-size:15px" class="fa">&#xf0f3;</i></a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Accounts" asp-action="Notifications"> <i style="font-size:15px" class="fa">&#xf0f3;</i></a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-grey" asp-area="" asp-controller="FriendList" asp-action="FriendRequests">Invites</a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="FriendList" asp-action="FriendRequests">Invites</a>
                         </li>
 
                         
     <li class="nav-item">
         
-         <a class="nav-link text-link" asp-controller="Accounts" asp-action="Profile">Profile</a>
+         <a class="nav-link text-light" asp-controller="Accounts" asp-action="Profile">Profile</a>
     </li>
     <li class="nav-item">
     
-         <a class="nav-link text-grey"
+         <a class="nav-link text-light"
                         asp-controller="Accounts"
                         asp-action="SignOut">
                         
@@ -43,10 +43,10 @@
 else
 {
     <li class="nav-item">
-        <a class="nav-link text-grey" asp-controller="Accounts" asp-action="Register">Register</a>
+        <a class="nav-link text-light" asp-controller="Accounts" asp-action="Register">Register</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link text-grey" asp-controller="Accounts" asp-action="Login"> <i class='fas fa-sign-in-alt' style='font-size:12px'></i></a>
+        <a class="nav-link text-light" asp-controller="Accounts" asp-action="Login"> <i class='fas fa-sign-in-alt' style='font-size:12px'></i></a>
     </li>
 }
 </ul>

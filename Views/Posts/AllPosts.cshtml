@@ -10,11 +10,16 @@
 
 @{
     ViewData["Title"] = "Timeline";
+    var sum = Model.NotificationCount + Model.FriendRequestCount;
 }
 
 @inject UserManager<User> UserManager
    
-
+@if(@Model.NotificationCount != 0 || @Model.FriendRequestCount != 0)
+{
+        <div class="alert alert-danger">You have @sum notifications.
+    </div>
+}
 
  <a class="btn btn-primary btn-sm"
                         asp-action="Post">
@@ -25,7 +30,7 @@
                         <a class="btn btn-info btn-sm"
                         asp-controller="Accounts"
                         asp-action="Notifications">
-                         <i style="font-size:11px" class="fa">&#xf0f3;</i> Notifications <span class="badge badge-light">@Model.NotificationCount </span>
+                         <i style="font-size:13px" class="fa">&#xf0f3;</i> Alerts <span class="badge badge-light">@Model.NotificationCount </span>
                 </a>
                 }
                 @if(@Model.FriendRequestCount != 0)
@@ -98,7 +103,8 @@
                         asp-action="Delete"
                         asp-route-id="@post.Id">
                         
-                         <i class="fa fa-remove" style="color: red;"></i>
+                        <i class='fas fa-trash' style='font-size:12px; color:black;'></i>
+
 
 
 

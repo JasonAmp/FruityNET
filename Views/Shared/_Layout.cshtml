@@ -8,17 +8,20 @@
     <title>@ViewData["Title"] - FruityNET</title>
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-lux.css" />
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-flatly.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-lux.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
-    
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <script src='https://kit.fontawesome.com/a076d05399.js'></script>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+<script src='https://kit.fontawesome.com/a076d05399.js'></script>
+
+
 
  
 </head>
@@ -38,16 +41,16 @@
                     <partial name="_LoginPartial" />
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-grey" asp-area="" asp-controller="Home" asp-action="Index"><i class="fa fa-home"></i></a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index"><i class="fa fa-home"></i></a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-grey" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                          <li class="nav-item">
-                            <a class="nav-link text-grey" asp-area="" asp-controller="Accounts" asp-action="Search"> Community</a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Accounts" asp-action="Search"> Community</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-grey" asp-area="" asp-controller="Groups" asp-action="SearchGroup">Groups</a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Groups" asp-action="SearchGroup">Groups</a>
                         </li>
                     </ul>
                 </div>
@@ -60,8 +63,8 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
+    <footer class="border-top footer text-muted" style="color: black;">
+        <div class="container" >
             &copy; 2020 - FruityNET - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>

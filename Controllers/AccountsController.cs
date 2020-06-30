@@ -303,6 +303,8 @@ namespace FruityNET.Controllers
                 var FriendList = _FriendListStore.GetFriendListOfUser(_currentUser.Id);
                 var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
                 var GroupsWithUser = GroupStore.GetGroupsWithUser(existingAccount.UserId);
+                var NotificationCount = _notificationBox.GetUserNotifications(existingAccount.Username).Count
+                + _FriendListStore.GetIncomingFriendRequests(FriendList.Id).Count;
 
                 var ProfileViewModel = new ProfileViewModel()
                 {
@@ -316,7 +318,8 @@ namespace FruityNET.Controllers
                     JoinDate = existingAccount.DateJoined,
                     UserType = existingAccount.UserType,
                     Groups = GroupsWithUser,
-                    UserId = _currentUser.Id
+                    UserId = _currentUser.Id,
+                    NotificationCount = NotificationCount
                 };
                 foreach (var friend in FriendUsers)
                 {
@@ -636,6 +639,7 @@ namespace FruityNET.Controllers
                     var ElapsedMinutes = DateTime.Now.Subtract(notification.NotificationDate).TotalMinutes;
                     var ElapsedHours = DateTime.Now.Subtract(notification.NotificationDate).TotalHours;
                     var ElapsedDays = DateTime.Now.Subtract(notification.NotificationDate).TotalDays;
+
                     var ElapsedMonths = DateTime.Now.Subtract(notification.NotificationDate).TotalDays / 12;
 
 

@@ -1,5 +1,9 @@
 @using FruityNET.DTOs
+@using Microsoft.AspNetCore.Identity
+@using FruityNET.Entities
+@using FruityNET.Enums
 
+@inject UserManager<User> UserManager
 
 
 @model PostViewDetaisDTO
@@ -13,18 +17,36 @@
                 </a><br><br>
 <div class="card">
   <div class="card-body">
-    <h4 class="card-title">@Model.Username</h4>
+    <h6 class="card-title">@Model.Username</h6>
     <p class="card-text">@Model.content</p>
-        <h6 class="card-subtitle mb-2 text-muted">@Model.DatePosted</h6>
+        <h7 class="card-subtitle mb-2 text-muted">@Model.DatePosted</h7>
+           @if((Model.UserID == UserManager.GetUserId(User) || Model.Permissions == UserType.Admin || Model.Permissions == UserType.SiteOwner) && Model.PostUserRole.Equals(UserType.User))
+        {
+   <a class="btn btn-default btn-sm"
+                        asp-action="Edit"
+                        asp-route-id="@Model.PostId">
+                        <i class="fa fa-edit" style="font-size:12px;color: black;"></i>
+                </a>
+                 <a 
+                        asp-action="Delete"
+                        asp-route-id="@Model.PostId">
+                        
+                         <i class="fa fa-remove" style="color: red;"></i>
 
+
+
+
+
+                </a>
+                }
     </div></div><br>
 
-<h3>Comments</h3>
+<h7>Comments</h7>
 @foreach (var comment in Model.comments)
 {
     <div class="card">
   <div class="card-body">
-    <h4 class="card-title">@comment.Username</h4>
+    <h6 class="card-title">@comment.Username</h6>
     <h6 class="card-subtitle mb-2 text-muted">@comment.DatePosted</h6>
     <p class="card-text">@comment.Content</p>
     

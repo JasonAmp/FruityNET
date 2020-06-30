@@ -8,30 +8,52 @@
     ViewData["Title"] = "Notifications";
 }
 
-<h3 style="text-align: center;">Notifications</h3><br><br><br>
+<h3 style="text-align: center;">Notifications</h3><br>
 
 
 @foreach (var Notification in Model.AllNotifications)
 {
      <div class="card">
   <div class="card-body">
-    <h4 class="card-title">
     
-    <p style="font-style: normal;">@Notification.Message      <a class="btn btn-danger btn-sm"
+    <p style="font-style: normal;">@Notification.Message <a 
                         asp-asp-controller="Accounts"
-
                         asp-action="DeleteNotification"
                         asp-route-id="@Notification.Id">
-                        
-                        <i class="fa fa-remove" ></i>
+                        <i class='fas fa-trash' style='font-size:14px;color:black'></i>
+                        </a></p>
+    @if(Notification.ElapsedMinute < 1)
+    {
+      <p>now</p>
+    }
+    @if(Notification.ElapsedMinute.Equals(1))
+    {
+      <p>@Notification.ElapsedMinute min ago</p>
+    }
+    else if(Notification.ElapsedMinute > 1 && Notification.ElapsedMinute < 60)
+    {
+      <p>@Notification.ElapsedMinute mins ago</p>
+    }
 
+    @if(Notification.ElapsedMinute >= 60 && Notification.ElapsedMinute < 120 || Notification.ElapsedHour.Equals(1))
+    {
+      <p>@Notification.ElapsedHour hour ago</p>
+    }
+    else if(Notification.ElapsedHour > 1 && Notification.ElapsedHour < 24 && Notification.ElapsedMinute >= 120)
+    {
+        <p>@Notification.ElapsedHour hours ago</p>
+    }
 
-
-
-                </a>
-
-    
-    
+    @if(Notification.ElapsedDay.Equals(1) && Notification.ElapsedHour >= 24)
+    {
+      <p>@Notification.ElapsedDay day ago</p>
+    }
+    else if(Notification.ElapsedDay > 1 && Notification.ElapsedHour >= 48)
+    {
+      <p>@Notification.ElapsedDay days ago</p>
+    }
+  
+  
   </div></div><br>
 
 }
