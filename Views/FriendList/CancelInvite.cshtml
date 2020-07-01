@@ -1,0 +1,50 @@
+
+
+@model FruityNET.DTOs.CancelRequestDTO
+
+
+@{
+    ViewData["Title"] = "Cancel Invite";
+}
+
+
+            <div class="alert alert-info"> Are you sure you want to cancel your friend invite to @Model.RecipientUsername ?
+    </div>
+           
+                    <form asp-action="ConfirmCancel" asp-route-id="@Model.RequestUserID" method="post" role="form">
+
+
+                
+            <button type="submit" class="btn btn-secondary">Confirm</button>
+            
+        </form><br>
+
+
+
+
+<br>
+        <h6 style="text-align: center;">Go To</h6>
+        <div class="card-body" style="text-align: center;">
+            <a class="btn btn-secondary btn-sm" style="text-align: center;"
+                        asp-controller="Accounts"
+                        asp-action="UserProfile"
+                        asp-route-id="@Model.RecipientAccountID">
+                        @Model.RecipientUsername's Profile
+                </a> <a class="btn btn-secondary btn-sm"
+                        asp-controller="Posts"
+                        asp-action="AllPosts">
+                        Community
+                </a>
+                
+                <a class="btn btn-secondary btn-sm"
+                        asp-controller="Accounts"
+
+                        asp-action="Search">
+                        <i style='font-size:11px' class='fas'>&#xf0c0;</i> Connect 
+                </a>
+           
+        </div>
+
+             
+            
+        

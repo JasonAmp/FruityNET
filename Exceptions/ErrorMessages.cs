@@ -9,6 +9,7 @@ namespace FruityNET.Exceptions
         public const string AccountSuspended = "Account is currently suspended.";
         public const string AccountInactive = "Account needs to be activated.";
 
+        public const string PendingRequest = "There is already a pending invite.";
         public const string InvalidResetCredentials = "Email does not match account which is needed to reset password.";
         public const string passwordConfirmationFail = "Password confirmation failed.";
 

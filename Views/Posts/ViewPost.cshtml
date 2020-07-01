@@ -19,7 +19,7 @@
   <div class="card-body">
     <h6 class="card-title">@Model.Username</h6>
     <p class="card-text">@Model.content</p>
-        <h7 class="card-subtitle mb-2 text-muted">@Model.DatePosted</h7>
+        <h7 class="card-subtitle mb-2 text-muted">@Model.DatePosted</h7><br>
            @if((Model.UserID == UserManager.GetUserId(User) || Model.Permissions == UserType.Admin || Model.Permissions == UserType.SiteOwner) && Model.PostUserRole.Equals(UserType.User))
         {
    <a class="btn btn-default btn-sm"
@@ -31,14 +31,14 @@
                         asp-action="Delete"
                         asp-route-id="@Model.PostId">
                         
-                         <i class="fa fa-remove" style="color: red;"></i>
-
-
-
-
-
-                </a>
+                         <i class="fa fa-remove" style="color: red;"></i></a>
+                             
                 }
+                <a class="btn btn-default btn-sm"
+                        asp-action="AddCommentToPost"
+                        asp-route-id="@Model.PostId" style="color: black;">
+                        Comment
+                </a>
     </div></div><br>
 
 <h7>Comments</h7>

@@ -1,0 +1,56 @@
+
+
+
+@model FruityNET.DTOs.SendRequestDTO
+
+@{
+    ViewData["Title"] = "Send Friend Request";
+}
+
+
+
+
+
+
+
+        <form asp-action="ConfirmInvite" asp-route-id="@Model.RecipientFriendListID" method="post" role="form">
+
+@if(!String.IsNullOrEmpty(ViewBag.Message))
+{
+    @if (ViewBag.Message.Equals("Success"))
+{
+    <div class="alert alert-success"> Invite has been sent. Awaiting response 
+    </div>
+}
+else if (ViewBag.Message.Equals("Error"))
+{
+    <div class="alert alert-danger"> There is already a pending invite.
+    </div>
+}<br>
+}
+           
+
+
+
+            @if(String.IsNullOrEmpty(ViewBag.Message))
+            {
+                <button type="submit" class="btn btn-primary">Confirm Invite</button><br>
+            }
+            else{<a class="btn btn-secondary btn-sm"
+                        asp-controller="Posts"
+
+                        asp-action="AllPosts">
+
+                       
+                        Community Posts
+                </a>
+                
+                <a class="btn btn-secondary btn-sm"
+                        asp-controller="Accounts"
+
+                        asp-action="Search">
+                         <i style='font-size:11px' class='fas'>&#xf0c0;</i> Connect 
+                </a>}
+             
+            
+        </form>

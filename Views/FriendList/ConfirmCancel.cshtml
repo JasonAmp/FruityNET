@@ -1,0 +1,54 @@
+
+
+@model FruityNET.DTOs.CancelRequestDTO
+
+
+@{
+    ViewData["Title"] = "Cancel Invite";
+}
+
+
+@if(!String.IsNullOrEmpty(ViewBag.Message))
+{
+    @if (ViewBag.Message.Equals("Success"))
+{
+       <div class="alert alert-info"> Invite to @Model.RecipientUsername has been canceled.
+    </div>
+}
+else if (ViewBag.Message.Equals("Error"))
+{
+    <div class="alert alert-danger"> Invite does not exist.
+    </div>
+}<br>
+
+           
+
+
+
+            }
+                    <h6 style="text-align: center;">Go To</h6>
+                                <div class="card-body" style="text-align: center;">
+
+            <br><a class="btn btn-secondary btn-sm"
+                        asp-controller="Posts"
+
+                        asp-action="AllPosts">
+
+                       
+                        Community Posts
+                </a>
+                
+                <a class="btn btn-secondary btn-sm"
+                        asp-controller="Accounts"
+
+                        asp-action="Search">
+                        <i style='font-size:11px' class='fas'>&#xf0c0;</i> Connect 
+                </a>
+
+                <a class="btn btn-secondary btn-sm"
+                        asp-controller="Accounts"
+
+                        asp-action="UserProfile"
+                        asp-route-id="@Model.RecipientAccountID">
+                        @Model.RecipientUsername's Profile
+                </a></div>

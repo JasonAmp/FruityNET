@@ -42,6 +42,9 @@ namespace FruityNET.Models
         public List<FriendDTO> Friends { get; set; }
         public List<Group> Groups { get; set; }
         public int NotificationCount { get; set; }
+        public Request PendingRequest { get; set; }
+        public Guid FriendListID { get; set; }
+        public FriendUser ExistingFriend { get; set; }
 
         public ProfileViewModel()
         {

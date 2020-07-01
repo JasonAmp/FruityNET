@@ -53,7 +53,7 @@ namespace FruityNET.Controllers
 
 
         [HttpGet]
-        public IActionResult SendFriendInvite(Guid Id)
+        public IActionResult SendInvite(Guid Id)
         {
             try
             {
@@ -64,7 +64,23 @@ namespace FruityNET.Controllers
                 var FriendList = _FriendListStore.GetFriendListById(Id);
                 if (FriendList is null)
                     throw new DomainException();
-                return View(FriendList);
+
+
+
+                var Recipient = _userStore.GetByIdentityUserId(FriendList.UserId);
+
+                var RequestsOfRecipient = _FriendListStore.GetIncomingFriendRequests(FriendList.Id);
+                var CurrentAsSender = RequestsOfRecipient.FirstOrDefault(x => x.Username.Equals(CurrentUser.UserName));
+                if (CurrentAsSender != null)
+                    throw new DomainException(ErrorMessages.PendingRequest);
+
+                return View(new SendRequestDTO()
+                {
+                    RecipientFriendListID = FriendList.Id,
+                    RecipientUsername = Recipient.Username,
+                    RecipientAccountID = Recipient.Id,
+
+                });
 
             }
             catch (DomainException ex)
@@ -82,12 +98,19 @@ namespace FruityNET.Controllers
 
 
         [HttpPost]
-        public IActionResult SendFriendInvite(FriendList friendList)
+        public IActionResult ConfirmInvite(Guid Id)
         {
+            var SendRequestDTO = new SendRequestDTO()
+            { };
             try
             {
                 var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-                var existingFriendList = _FriendListStore.GetFriendListById(friendList.Id);
+                var existingFriendList = _FriendListStore.GetFriendListById(Id);
+                var Requests = _FriendListStore.GetIncomingFriendRequests(existingFriendList.Id);
+                var Recipient = _userStore.GetByIdentityUserId(existingFriendList.UserId);
+                var PendingRequest = Requests.FirstOrDefault(x => x.Username.Equals(_currentUser.UserName));
+                if (PendingRequest != null)
+                    throw new DomainException(ErrorMessages.PendingRequest);
 
                 var RequestUser = new RequestUser()
                 {
@@ -106,14 +129,24 @@ namespace FruityNET.Controllers
                 {
                     Message = $"{RequestUser.Username} sent you a Friend Invite.",
                     NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingFriendList.UserId).Id,
-                    RecieverUsername = _userStore.GetByIdentityUserId(existingFriendList.UserId).Username
+                    RecieverUsername = Recipient.Username
                 };
                 _RequestStore.SendRequest(Request);
                 _notificationBox.SendNotifcation(Notification);
 
                 _context.SaveChanges();
                 ViewBag.Message = "Success";
-                return RedirectToAction(ActionName.Search, ControllerName.Accounts);
+                SendRequestDTO.RecipientFriendListID = Id;
+                SendRequestDTO.RecipientUsername = Recipient.Username;
+                SendRequestDTO.RecipientAccountID = Recipient.Id;
+
+                return View(SendRequestDTO);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                ViewBag.Message = "Error";
+                return View(SendRequestDTO);
             }
             catch (Exception ex)
             {
@@ -123,7 +156,7 @@ namespace FruityNET.Controllers
         }
 
         [HttpGet]
-        public IActionResult FriendRequests()
+        public IActionResult Invites()
         {
             try
             {
@@ -255,7 +288,7 @@ namespace FruityNET.Controllers
                 _RequestStore.DeleteRequest(request);
                 _RequestStore.DeleteRequestUser(requestUser);
                 _context.SaveChanges();
-                return RedirectToAction("FriendRequests", "FriendList");
+                return RedirectToAction("Invites", "FriendList");
             }
             catch (Exception ex)
             {
@@ -383,6 +416,100 @@ namespace FruityNET.Controllers
             _FriendListStore.AddFriend(FriendForCurrentUser);
             _FriendListStore.AddFriend(FriendForOtherUser);
         }
+
+        [HttpGet]
+        public IActionResult CancelInvite(Guid Id)
+        {
+            try
+            {
+                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (_currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingRequest = _RequestStore.GetRequestById(Id);
+                if (existingRequest is null)
+                    throw new DomainException(ErrorMessages.RequestDoesNotExist);
+
+                var recipientFriends = _FriendListStore.GetFriendListById(existingRequest.FriendListId);
+
+                var recipientUser = _userStore.GetByIdentityUserId(recipientFriends.UserId);
+
+                var existingRequestUser = _RequestStore.GetRequestUserById(existingRequest.RequestUserId);
+                if (!existingRequestUser.Username.Equals(_currentUser.UserName))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var existingAccount = _userStore.GetByIdentityUserId(existingRequestUser.UserId);
+
+                var request = new CancelRequestDTO()
+                {
+                    RequestID = existingRequest.Id,
+                    RequestUserID = existingRequestUser.Id,
+                    RequestUsername = existingRequestUser.Username,
+                    AccountID = existingAccount.Id,
+                    RecipientAccountID = recipientUser.Id,
+                    RecipientUsername = recipientUser.Username
+                };
+                return View(request);
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("NotFound", "Accounts");
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ConfirmCancel(Guid Id)
+        {
+            try
+            {
+                var existingUser = _RequestStore.GetRequestUserById(Id);
+                if (existingUser is null)
+                    throw new DomainException(ErrorMessages.UserDoesNotExist);
+                var existingAccount = _userStore.GetByIdentityUserId(existingUser.UserId);
+                var existingRequest = _RequestStore.GetAllRequests()
+                .FirstOrDefault(x => x.Username.Equals(existingUser.Username));
+                var RecipientFriendsList = _FriendListStore.GetFriendListById(existingRequest.FriendListId);
+                var RecipientAccount = _userStore.GetByIdentityUserId(RecipientFriendsList.UserId);
+
+                var CancelRequestDTO = new CancelRequestDTO()
+                {
+                    RequestUsername = new string(existingAccount.Username),
+                    AccountID = new Guid(existingAccount.Id.ToString()),
+                    RecipientAccountID = new Guid(RecipientAccount.Id.ToString()),
+                    RecipientUsername = new string(RecipientAccount.Username)
+                };
+
+                _RequestStore.DeleteRequestUser(existingUser);
+                _context.SaveChanges();
+                ViewBag.Message = "Success";
+                return View(CancelRequestDTO);
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("NotFound", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+
 
 
     }

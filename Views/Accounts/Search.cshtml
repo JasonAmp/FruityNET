@@ -13,23 +13,17 @@
 @model SearchUserDTO
 
 @{
-    ViewData["Title"] = "Community";
+    ViewData["Title"] = "Find Friends";
 }
-
-
 @if (!ViewData.ModelState.IsValid && ViewData.ModelState["Error"].Errors.Count > 0)
 {
     <div class="alert alert-danger">@ViewData.ModelState["Error"].Errors.First().ErrorMessage
     </div>
 }
-
-
 <br>
     <div class="jumbotron">
-        <h4 style="text-align: center;">Community</h4><br>
-
-
-         <form asp-action="Search" method="post" role="form" style="text-align: center;">
+        <h4 style="text-align: center;">Connect</h4><br>
+        <form asp-action="Search" method="post" role="form" style="text-align: center;">
              <div class="form-group >
                     
                    <label asp-for="Username">Filter by Username
@@ -41,10 +35,7 @@
                 <span asp-validation-for="Username" class="text-danger"></span>
             </form></div>
 <br>
-
-
-  
-        <table class="table table-hover">
+<table class="table table-hover">
   <thead>
     <tr>
       <th scope="col">Username </th>
@@ -53,18 +44,12 @@
       <th scope="col">Role </th>
       <th scope="col"> </th>
             <th scope="col"> </th>
-            
-
-
-
     </tr>
   </thead>
     <tbody>
           @foreach (var result in Model.Users)
     {
         <tr>
-            
-      
       <td>@result.Username</td>
       <td>@result.Firstname</td>
       <td>@result.Lastname</td>
@@ -94,34 +79,29 @@
              <a class="btn btn-info btn-sm"
                         asp-controller="FriendList"
 
-                        asp-action="SendFriendInvite"
+                        asp-action="SendInvite"
 
                          asp-route-id="@result.ResultUserFriendListID">
                         <i class='fas fa-user-plus' style='font-size:14px;color:white'></i>
-                          Send Friend Request
+                          Send Invite
                 </a>
-         
         }
         @if(result.isFriendsOfCurrentUser )
         {
             <p>You and @result.Username are friends.</p>
         }
-
         @if(result.RequestIsPending)
         {
-            <p>Pending Request</p>
+            <a class="btn btn-danger btn-sm"
+                        asp-controller="FriendList"
+                        asp-action="CancelInvite"
+                        asp-route-id="@result.RequestId">
+                       <i class="fa fa-remove" style="color: white;"></i>
+                         Cancel Invite
+                </a>
         }
-
-       
-        
-        
-        
-
         </td>
         <td></td>
-          
-        
-    
     </tr>
     }
     </tbody>

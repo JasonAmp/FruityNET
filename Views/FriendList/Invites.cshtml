@@ -1,0 +1,56 @@
+@using FruityNET.DTOs
+
+
+
+@model FriendRequestViewDTO
+
+@{
+    ViewData["Title"] = "Friend Requests";
+}
+
+<h2 style="text-align: center;">Friend Requests</h2><br><br>
+    <div class="jumbotron">
+
+
+
+<h6 style="text-align: center;">Invites</h6>
+@if(Model.IncomingRequests.Count is 0)
+{<p style="text-align: center;">No Incoming Requests</p>}
+@foreach (var request in Model.IncomingRequests)
+{
+    <div class="card">
+  <div class="card-body" style="text-align: center;">
+    <h4 class="card-title">
+      @if(@request.Pending is true){<p style="text-align: center;">Pending</p>}</h4>
+    <p class="card-text" style="text-align: center;">@request.message</p>
+    <a class="btn btn-success btn-sm"
+                        asp-action="AcceptRequest"
+                        asp-controller="FriendList"
+                        asp-route-id="@request.Id">
+                        Accept
+                </a>
+    <a class="btn btn-danger btn-sm"
+                        asp-action="DeclineRequest"
+                        asp-controller="FriendList"
+                        asp-route-id="@request.Id">
+                        Decline
+                </a>
+    
+  </div></div><br>
+}
+<br>
+<br><br><br>
+<h6 style="text-align: center;" >Sent Requests</h6>
+@if(Model.OutgoingRequests.Count is 0)
+{<p style="text-align: center;">No Requests Sent</p>}
+@foreach (var request in Model.OutgoingRequests)
+{
+    <div class="card">
+  <div class="card-body">
+    <h4 class="card-title">
+    <h6 class="card-text" style="text-align: center;">@request.Username</h6>
+    <h7 style="text-align: center;">Awaiting Response </h7>
+    
+  </div></div><br>
+}
+</div>

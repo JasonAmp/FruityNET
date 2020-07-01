@@ -457,7 +457,9 @@ namespace FruityNET.Controllers
                             UserId = user.UserId,
                             isFriendsOfCurrentUser = (areFriends is true) ? true : false,
                             ResultUserFriendListID = ResultFriendList.Id,
-                            RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null))
+                            RequestId = (SentByCurrent != null) ? SentByCurrent.Id : new Guid(),
+                            RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null)),
+
                         });
                     }
 
@@ -525,7 +527,8 @@ namespace FruityNET.Controllers
                             UserId = ResultUser.UserId,
                             isFriendsOfCurrentUser = (areFriends is true) ? true : false,
                             ResultUserFriendListID = ResultFriendList.Id,
-                            RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null))
+                            RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null)),
+                            RequestId = SentByCurrent.Id
                         };
                         searchUserDTO.Users.Add(SearchResultDTO);
 
@@ -571,6 +574,8 @@ namespace FruityNET.Controllers
                 var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
                 var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
                 var GroupsWithUser = GroupStore.GetGroupsWithUser(existingAccount.UserId);
+                var FriendRequests = _FriendListStore.GetIncomingFriendRequests(FriendList.Id);
+                var existingFriend = FriendUsers.FirstOrDefault(x => x.UserId.Equals(currentUser.Id));
 
                 var ProfileViewModel = new ProfileViewModel
                 {
@@ -583,7 +588,10 @@ namespace FruityNET.Controllers
                     UserType = existingAccount.UserType,
                     LastActive = existingAccount.LastActive,
                     JoinDate = existingAccount.DateJoined,
-                    Groups = GroupsWithUser
+                    Groups = GroupsWithUser,
+                    PendingRequest = FriendRequests.FirstOrDefault(x => x.Username.Equals(currentUser.UserName)),
+                    FriendListID = FriendList.Id,
+                    ExistingFriend = existingFriend
                 };
                 foreach (var friend in FriendUsers)
                 {

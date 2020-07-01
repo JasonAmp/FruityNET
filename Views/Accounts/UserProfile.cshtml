@@ -17,9 +17,38 @@
     <li class="list-group-item">Last Active: @Model.LastActive</li>
         <li class="list-group-item">Member Since: @Model.JoinDate</li>
                 <li class="list-group-item" style="color: red;">Role:  @Model.UserType</li>
+                  <div class="card-body">
+
+                  @if(Model.ExistingFriend is null && Model.PendingRequest is null)
+  {
+        <a class="btn btn-info btn-sm"
+                        asp-controller="FriendList"
+
+                        asp-action="SendInvite"
+
+                         asp-route-id="@Model.FriendListID">
+                        <i class='fas fa-user-plus' style='font-size:14px;color:white'></i>
+                        Send Invite
+                </a>
+  }
+  else if(Model.PendingRequest != null)
+  {
+       <p><a class="btn btn-danger btn-sm"
+                        asp-controller="FriendList"
+
+                        asp-action="CancelInvite"
+
+                         asp-route-id="@Model.PendingRequest.Id">
+                        <i class='fas fa-user-plus' style='font-size:14px;color:white'></i>
+                        Cancel Invite
+                </a></p>
+  }
+ </div>
 
 
   </ul>
+
+
   
 </div>
 
