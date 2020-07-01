@@ -144,15 +144,16 @@ namespace FruityNET.Controllers
                 try
                 {
                     var existingAccount = _userStore.GetByUsername(model.UserName);
+                    if (existingAccount is null)
+                        throw new DomainException(ErrorMessages.InvalidLogin);
+
+
                     if (existingAccount.AccountStatus != Status.Active)
                     {
                         if (existingAccount.AccountStatus.Equals(Status.Suspended))
                             throw new DomainException(ErrorMessages.AccountSuspended);
-                        else
-                        {
-                            throw new DomainException(ErrorMessages.AccountInactive);
-                        }
                     }
+
                     var result = await signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
 
                     if (result.Succeeded)
@@ -162,10 +163,7 @@ namespace FruityNET.Controllers
                         _context.SaveChanges();
                         return RedirectToAction("Index", "Home");
                     }
-                    else
-                    {
-                        throw new DomainException(ErrorMessages.InvalidLogin);
-                    }
+
                 }
                 catch (DomainException ex)
                 {
@@ -202,6 +200,15 @@ namespace FruityNET.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    var UserWithEmail = _userStore.GetAccounts().First(x => x.Email.Equals(model.Email));
+                    if (UserWithEmail != null)
+                    {
+                        _logger.LogError($"Email '{model.Email}' is taken.");
+                        ModelState.AddModelError("Error", $"Email '{model.Email}' is taken.");
+                    }
+
+
+
                     var user = new User
                     {
                         UserName = model.UserName,
@@ -248,7 +255,10 @@ namespace FruityNET.Controllers
                     _logger.LogError("Password confirmation failed");
                     ModelState.AddModelError("Error", "Password confirmation failed");
                 }
-                else
+                else if (String.IsNullOrEmpty(model.UserName) || String.IsNullOrEmpty(model.FirstName)
+                || String.IsNullOrEmpty(model.LastName) || String.IsNullOrEmpty(model.Email)
+                || String.IsNullOrEmpty(model.Password) || String.IsNullOrEmpty(model.ConfirmPassword)
+                || String.IsNullOrEmpty(model.UserName))
                 {
                     ModelState.AddModelError("Error", ErrorMessages.RequiredValuesNotProvided);
                 }
@@ -1068,6 +1078,12 @@ namespace FruityNET.Controllers
             }
 
 
+        }
+
+        [HttpGet]
+        public IActionResult DeleteAccount(string Id)
+        {
+            return View();
         }
     }
 

@@ -3,6 +3,9 @@ namespace FruityNET.Exceptions
     public class ErrorMessages
     {
         public const string UserDoesNotExist = "User Does Not Exist.";
+
+        public const string UserAlreadyExists = "An Account with provided Username or Email already exists.";
+
         public const string RequiredValuesNotProvided = "Required fields not provided";
         public const string InvalidInput = "Required fields have invalid input";
         public const string UserNotProvided = "Please provide a Username";
