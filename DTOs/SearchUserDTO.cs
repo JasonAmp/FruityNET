@@ -11,6 +11,8 @@ namespace FruityNET.DTOs
         [Required]
         public string Username { get; set; }
 
+        public int InviteCount { get; set; }
+
         public List<SearchUserResultDTO> Users { get; set; }
 
         public SearchUserDTO()
@@ -31,5 +33,6 @@ namespace FruityNET.DTOs
         public bool isFriendsOfCurrentUser { get; set; }
         public bool RequestIsPending { get; set; }
         public Guid RequestId { get; set; }
+        public Request Request { get; set; }
     }
 }

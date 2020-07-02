@@ -20,6 +20,14 @@
     <div class="alert alert-danger">@ViewData.ModelState["Error"].Errors.First().ErrorMessage
     </div>
 }
+else
+{
+  @if(@Model.InviteCount != 0 )
+{
+        <div class="alert alert-danger">You have @Model.InviteCount friend invite(s).
+    </div>
+}
+}
 <br>
     <div class="jumbotron">
         <h4 style="text-align: center;">Connect</h4><br>
@@ -31,7 +39,16 @@
                     <input asp-for="Username" type="text" placeholder="Username"  />
                                       <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
 
-                </div>                                    
+                </div> 
+                @if(!String.IsNullOrEmpty(Model.Username))
+                {
+                  <a class="btn btn-secondary btn-sm"
+                        asp-controller="Accounts"
+                        asp-action="Search">
+                        Back
+                </a>
+                }
+                                                   
                 <span asp-validation-for="Username" class="text-danger"></span>
             </form></div>
 <br>
@@ -90,7 +107,9 @@
         {
             <p>You and @result.Username are friends.</p>
         }
-        @if(result.RequestIsPending)
+        @if(result.Request != null)
+        {
+           @if(result.Request.Username.Equals(UserManager.GetUserName(User)))
         {
             <a class="btn btn-danger btn-sm"
                         asp-controller="FriendList"
@@ -100,6 +119,12 @@
                          Cancel Invite
                 </a>
         }
+        else if(!result.Request.Username.Equals(UserManager.GetUserName(User)) && result.RequestIsPending)
+        {
+            <p style="color: red;">Pending request from @result.Username</p>
+        }
+        }
+       
         </td>
         <td></td>
     </tr>
