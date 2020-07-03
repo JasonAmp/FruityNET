@@ -206,8 +206,6 @@ namespace FruityNET.Controllers
                         ModelState.AddModelError("Error", $"Email '{model.Email}' is taken.");
                     }
 
-
-
                     var user = new User
                     {
                         UserName = model.UserName,
@@ -485,7 +483,6 @@ namespace FruityNET.Controllers
 
                     var GetSearchResultQuery = new GetSearchResultQuery(_userStore, _FriendListStore,
                     _RequestStore, currentUser, ResultUser, searchUserDTO);
-
                     return View(GetSearchResultQuery.Handle());
                 }
                 return View(searchUserDTO);
@@ -495,14 +492,12 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 ModelState.AddModelError("Error", ex.Message);
                 return View(searchUserDTO);
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError);
             }
-
         }
 
 
@@ -552,31 +547,8 @@ namespace FruityNET.Controllers
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
 
-                var NotificationsViewDTO = new NotificationsViewDTO() { };
-                var Notifications = from x in _notificationBox.GetUserNotifications(CurrentUser.UserName)
-                                    orderby x.NotificationDate descending
-                                    select x;
-
-                foreach (var notification in Notifications)
-                {
-                    var ElapsedMinutes = DateTime.Now.Subtract(notification.NotificationDate).TotalMinutes;
-                    var ElapsedHours = DateTime.Now.Subtract(notification.NotificationDate).TotalHours;
-                    var ElapsedDays = DateTime.Now.Subtract(notification.NotificationDate).TotalDays;
-
-                    var ElapsedMonths = DateTime.Now.Subtract(notification.NotificationDate).TotalDays / 12;
-                    NotificationsViewDTO.AllNotifications.Add(new NotificationDTO()
-                    {
-                        Id = notification.Id,
-                        Message = notification.Message,
-                        NotificationBoxId = notification.NotificationBoxId,
-                        RecieverUsername = notification.RecieverUsername,
-                        ElapsedHour = Math.Round(ElapsedHours),
-                        ElapsedMinute = Math.Round(ElapsedMinutes),
-                        ElapsedDay = Math.Round(ElapsedDays)
-                    });
-                }
-
-                return View(NotificationsViewDTO);
+                var GetAllNotifications = new GetAllNotificationsQuery(_userStore, _notificationBox, existingAccount, CurrentUser);
+                return View(GetAllNotifications.Handle());
             }
             catch (DomainException ex)
             {
@@ -588,8 +560,6 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction("ServerError");
             }
-
-
         }
 
         public IActionResult DeleteNotification(Guid Id)
@@ -954,7 +924,6 @@ namespace FruityNET.Controllers
 
                     if (existingAccount.AccountStatus.Equals(Status.Suspended))
                         throw new DomainException(ErrorMessages.AccountSuspended);
-
 
                     var passwordHasher = new PasswordHasher<User>();
                     var NewPasswordHash = passwordHasher.HashPassword(existingUser, model.Password);

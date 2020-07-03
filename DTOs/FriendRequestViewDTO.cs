@@ -7,14 +7,14 @@ namespace FruityNET.DTOs
     public class FriendRequestViewDTO
     {
 
-        public List<FriendRequestDTO> IncomingRequests { get; set; }
-        public List<FriendRequestDTO> OutgoingRequests { get; set; }
+        public List<FriendRequestDTO> RecievedInvites { get; set; }
+        public List<FriendRequestDTO> SentInvites { get; set; }
 
 
         public FriendRequestViewDTO()
         {
-            IncomingRequests = new List<FriendRequestDTO>();
-            OutgoingRequests = new List<FriendRequestDTO>();
+            RecievedInvites = new List<FriendRequestDTO>();
+            SentInvites = new List<FriendRequestDTO>();
         }
 
 

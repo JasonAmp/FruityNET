@@ -10,6 +10,7 @@ using System.Linq;
 using FruityNET.Exceptions;
 using FruityNET.ParameterStrings;
 using Microsoft.Extensions.Logging;
+using FruityNET.Queries;
 
 namespace FruityNET.Controllers
 {
@@ -160,66 +161,24 @@ namespace FruityNET.Controllers
         {
             try
             {
-                var _currentUser = _context.Users.Find(userManager.GetUserId(User));
-                if (_currentUser is null)
+                var currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (currentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
-                var existingAccount = _userStore.GetByIdentityUserId(_currentUser.Id);
-
-                var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
-                var IncomingRequests = _RequestStore.GetAllRequests().FindAll(x => x.FriendListId == FriendList.Id);
-                var CurrentAsRequestUser = _RequestStore.GetAllRequestUsers().FirstOrDefault(x => x.UserId == _currentUser.Id);
-                var OutgoingRequests = (CurrentAsRequestUser is null) ? new List<Request>() : _RequestStore.GetAllRequests().FindAll(x => x.Username == CurrentAsRequestUser.Username);
-
-
-                var friendRequestViewDTO = new FriendRequestViewDTO();
-
-                foreach (var Request in IncomingRequests)
-                {
-                    var RequestUser = _RequestStore.GetRequestUserById(Request.RequestUserId);
-                    friendRequestViewDTO.IncomingRequests.Add(new FriendRequestDTO()
-                    {
-                        Id = Request.Id,
-                        RequestUserId = Request.RequestUserId,
-                        FriendListId = Request.FriendListId,
-                        Pending = Request.Pending,
-                        Username = RequestUser.Username,
-                        message = $"{RequestUser.Username} would like to be your friend."
-                    });
-                }
-
-                foreach (var Request in OutgoingRequests)
-                {
-
-                    var InviteeFriendsList = _FriendListStore.GetFriendListById(Request.FriendListId);
-                    var Invitee = _userStore.GetByIdentityUserId(InviteeFriendsList.UserId);
-                    friendRequestViewDTO.OutgoingRequests.Add(new FriendRequestDTO()
-                    {
-                        Id = Request.Id,
-                        RequestUserId = Request.RequestUserId,
-                        FriendListId = Request.FriendListId,
-                        Pending = Request.Pending,
-                        Username = Invitee.Username
-                    });
-                }
-                return View(friendRequestViewDTO);
+                var existingAccount = _userStore.GetByIdentityUserId(currentUser.Id);
+                var GetAllInvitesQuery = new GetAllInvitesQuery(_RequestStore, _userStore, currentUser, existingAccount, _FriendListStore);
+                return View(GetAllInvitesQuery.Handle());
             }
             catch (DomainException ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.Login, ControllerName.Accounts);
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
-
-
             }
-
-
-
         }
 
         [HttpGet]
@@ -245,8 +204,6 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
             }
-
-
         }
 
 
