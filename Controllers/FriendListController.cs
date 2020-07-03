@@ -191,7 +191,6 @@ namespace FruityNET.Controllers
                 if (currentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
-
                 return View(new RequestDTO() { RequestID = Id });
             }
             catch (DomainException ex)
