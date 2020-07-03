@@ -158,7 +158,6 @@ namespace FruityNET.Controllers
 
                     if (result.Succeeded)
                     {
-
                         existingAccount.LastActive = DateTime.Now;
                         _context.SaveChanges();
                         return RedirectToAction("Index", "Home");
@@ -440,55 +439,11 @@ namespace FruityNET.Controllers
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
                 var existingAccount = _userStore.GetByIdentityUserId(currentUser.Id);
-                if (existingAccount.AccountStatus.Equals(Status.Suspended))
-                    signInManager.SignOutAsync();
 
-                var AllUsers = _userStore.GetAccounts();
-                var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
-                var CurrentUserRequests = _RequestStore.PendingRequest(FriendList.Id);
+                var GetAllUsers = new GetAllUsersQuery(_userStore, _FriendListStore,
+                _RequestStore, currentUser, existingAccount, signInManager);
 
-
-                var SearchUserDTO = new SearchUserDTO()
-                {
-                    Users = new List<SearchUserResultDTO>(),
-                    InviteCount = CurrentUserRequests.Count
-                };
-                foreach (var user in AllUsers)
-                {
-                    var ResultFriendList = _FriendListStore.GetFriendListOfUser(user.UserId);
-                    var areFriends = _FriendListStore.IsFriendsOfUser(FriendList.Id, user.UserId);
-                    var ResultRequests = _RequestStore.PendingRequest(ResultFriendList.Id);
-                    var SentByCurrent = ResultRequests.FirstOrDefault(x => x.Username == currentUser.UserName);
-                    var SentByResult = CurrentUserRequests.FirstOrDefault(x => x.Username == user.Username);
-
-                    if (user.AccountStatus.Equals(Status.Active))
-                    {
-                        var SearchResultDTO = new SearchUserResultDTO()
-                        {
-                            Id = user.Id,
-                            Firstname = user.FirstName,
-                            Lastname = user.LastName,
-                            Username = user.Username,
-                            UserType = user.UserType,
-                            UserId = user.UserId,
-                            isFriendsOfCurrentUser = (areFriends is true) ? true : false,
-                            ResultUserFriendListID = ResultFriendList.Id,
-                            RequestId = (SentByCurrent != null) ? SentByCurrent.Id : new Guid(),
-                            RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null)),
-
-                        };
-                        if (SentByCurrent != null)
-                            SearchResultDTO.Request = SentByCurrent;
-
-                        if (SentByResult != null)
-                            SearchResultDTO.Request = SentByResult;
-
-                        SearchUserDTO.Users.Add(SearchResultDTO);
-                    }
-
-                }
-
-                return View(SearchUserDTO);
+                return View(GetAllUsers.Handle());
             }
             catch (DomainException ex)
             {
@@ -528,26 +483,10 @@ namespace FruityNET.Controllers
                     || ResultUser.AccountStatus.Equals(Status.Inactive))
                         throw new DomainException(ErrorMessages.UserDoesNotExist);
 
-                    if (ResultUser.UserId.Equals(currentUser.Id))
-                    {
-                        var CurrentUserAsResult = new SearchUserResultDTO
-                        {
-                            Id = ResultUser.Id,
-                            Firstname = ResultUser.FirstName,
-                            Lastname = ResultUser.LastName,
-                            Username = ResultUser.Username,
-                            UserType = ResultUser.UserType,
-                            UserId = ResultUser.UserId,
-                        };
-                        searchUserDTO.Users.Add(CurrentUserAsResult);
-                        return View(searchUserDTO);
-                    }
+                    var GetSearchResultQuery = new GetSearchResultQuery(_userStore, _FriendListStore,
+                    _RequestStore, currentUser, ResultUser, searchUserDTO);
 
-                    var SearchResultDTO = CheckSearchResult(currentUser, ResultUser);
-                    searchUserDTO.Users = new List<SearchUserResultDTO>();
-                    searchUserDTO.Users.Add(SearchResultDTO);
-
-
+                    return View(GetSearchResultQuery.Handle());
                 }
                 return View(searchUserDTO);
             }
@@ -566,42 +505,7 @@ namespace FruityNET.Controllers
 
         }
 
-        protected SearchUserResultDTO CheckSearchResult(IdentityUser currentUser, UserAccount Result)
-        {
-            var CurrentUserAccount = _userStore.GetByIdentityUserId(currentUser.Id);
 
-            var FriendList = _FriendListStore.GetFriendListOfUser(CurrentUserAccount.UserId);
-            var ResultFriendList = _FriendListStore.GetFriendListOfUser(Result.UserId);
-
-            var areFriends = _FriendListStore.IsFriendsOfUser(FriendList.Id, Result.UserId);
-
-            var ResultRequests = _RequestStore.PendingRequest(ResultFriendList.Id);
-            var CurrentUserRequests = _RequestStore.PendingRequest(FriendList.Id);
-
-            var SentByCurrent = ResultRequests.FirstOrDefault(x => x.Username == currentUser.UserName);
-            var SentByResult = CurrentUserRequests.FirstOrDefault(x => x.Username == Result.Username);
-
-            var SearchResultDTO = new SearchUserResultDTO
-            {
-                Id = Result.Id,
-                Firstname = Result.FirstName,
-                Lastname = Result.LastName,
-                Username = Result.Username,
-                UserType = Result.UserType,
-                UserId = Result.UserId,
-                isFriendsOfCurrentUser = (areFriends is true) ? true : false,
-                ResultUserFriendListID = ResultFriendList.Id,
-                RequestIsPending = (areFriends is false && (SentByCurrent != null || SentByResult != null)),
-                RequestId = (SentByCurrent != null) ? SentByCurrent.Id : new Guid(),
-
-            };
-            if (SentByCurrent != null)
-                SearchResultDTO.Request = SentByCurrent;
-
-            if (SentByResult != null)
-                SearchResultDTO.Request = SentByResult;
-            return SearchResultDTO;
-        }
 
 
         [HttpGet]

@@ -61,7 +61,6 @@ namespace FruityNET.Queries
             var existingFriend = FriendUsers.FirstOrDefault(x => x.UserId.Equals(_CurrentUser.Id));
 
             var ProfileViewModel = CreateViewModel(existingAccount, GroupsWithUser, existingFriend, FriendList, FriendRequests);
-
             ProfileViewModel.Friends = GetFriendDTOs(FriendUsers);
 
             return ProfileViewModel;
