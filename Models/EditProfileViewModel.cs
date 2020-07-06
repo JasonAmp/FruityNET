@@ -45,6 +45,7 @@ namespace FruityNET.Models
         public Request PendingRequest { get; set; }
         public Guid FriendListID { get; set; }
         public FriendUser ExistingFriend { get; set; }
+        public Request RequestToCurrent { get; set; }
 
         public ProfileViewModel()
         {

@@ -14,14 +14,14 @@
 
 
 <h6 style="text-align: center;">Invites</h6>
-@if(Model.IncomingRequests.Count is 0)
-{<p style="text-align: center;">No Incoming Requests</p>}
-@foreach (var request in Model.IncomingRequests)
+@if(Model.RecievedInvites.Count is 0)
+{<p style="text-align: center; center;font-size: 11px;">No Invites</p>}
+@foreach (var request in Model.RecievedInvites)
 {
     <div class="card">
   <div class="card-body" style="text-align: center;">
-    <h4 class="card-title">
-      @if(@request.Pending is true){<p style="text-align: center;">Pending</p>}</h4>
+    <h4 class="card-title" style="text-align: center;">
+      @if(@request.Pending is true){<p style="text-align: center; center;font-size: 11px;">Pending Invite</p>}</h4>
     <p class="card-text" style="text-align: center;">@request.message</p>
     <a class="btn btn-success btn-sm"
                         asp-action="AcceptRequest"
@@ -40,16 +40,16 @@
 }
 <br>
 <br><br><br>
-<h6 style="text-align: center;" >Sent Requests</h6>
-@if(Model.OutgoingRequests.Count is 0)
-{<p style="text-align: center;">No Requests Sent</p>}
-@foreach (var request in Model.OutgoingRequests)
+<h6 style="text-align: center;" >Sent Invites</h6>
+@if(Model.SentInvites.Count is 0)
+{<p style="text-align: center; center;font-size: 11px;">No Requests Sent</p>}
+@foreach (var request in Model.SentInvites)
 {
     <div class="card">
   <div class="card-body">
     <h4 class="card-title">
     <h6 class="card-text" style="text-align: center;">@request.Username</h6>
-    <h7 style="text-align: center;">Awaiting Response </h7>
+    <h7 style="text-align: center;"><p style=" center;font-size: 11px;">Awaiting Response</p> </h7>
     
   </div></div><br>
 }

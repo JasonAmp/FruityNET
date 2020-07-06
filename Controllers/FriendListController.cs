@@ -67,12 +67,17 @@ namespace FruityNET.Controllers
                     throw new DomainException();
 
 
+                var CurrentFriendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
+                var RequestsOfCurrent = _FriendListStore.GetIncomingFriendRequests(CurrentFriendList.Id);
 
                 var Recipient = _userStore.GetByIdentityUserId(FriendList.UserId);
-
                 var RequestsOfRecipient = _FriendListStore.GetIncomingFriendRequests(FriendList.Id);
+
                 var CurrentAsSender = RequestsOfRecipient.FirstOrDefault(x => x.Username.Equals(CurrentUser.UserName));
-                if (CurrentAsSender != null)
+                var PendingFromOther = RequestsOfCurrent.FirstOrDefault(x => x.Username.Equals(Recipient.Username));
+
+
+                if (CurrentAsSender != null || PendingFromOther != null)
                     throw new DomainException(ErrorMessages.PendingRequest);
 
                 return View(new SendRequestDTO()

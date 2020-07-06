@@ -13,7 +13,7 @@
 }
 @if(@Model.NotificationCount != 0)
 {
-        <div class="alert alert-danger">You have @Model.NotificationCount notifications.
+        <div class="alert alert-info">You have @Model.NotificationCount notifications.
     </div>
 }
 <br>
@@ -128,10 +128,7 @@ Admin Portal
           }
           
         </li>
-
-        
-
-  }
+}
   @if(Model.Groups.Count is 0)
   {
     <p>No Groups</p>

@@ -17,6 +17,8 @@ using FruityNET.ParameterStrings;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using FruityNET.Queries;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 
 namespace FruityNET.Controllers
 {
@@ -147,48 +149,46 @@ namespace FruityNET.Controllers
                     if (existingAccount is null)
                         throw new DomainException(ErrorMessages.InvalidLogin);
 
-
                     if (existingAccount.AccountStatus != Status.Active)
                     {
                         if (existingAccount.AccountStatus.Equals(Status.Suspended))
                             throw new DomainException(ErrorMessages.AccountSuspended);
                     }
 
-                    var result = await signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
+                    var user = await userManager.FindByIdAsync(existingAccount.UserId);
+                    var result = await userManager.CheckPasswordAsync(user, model.Password);
 
-                    if (result.Succeeded)
-                    {
-                        existingAccount.LastActive = DateTime.Now;
-                        _context.SaveChanges();
-                        return RedirectToAction("Index", "Home");
-                    }
+                    if (result is false)
+                        throw new DomainException(ErrorMessages.InvalidLogin);
 
+                    SignUserIn(user, existingAccount);
+                    return RedirectToAction("Index", "Home");
                 }
                 catch (DomainException ex)
                 {
                     _logger.LogError(ex.Message);
                     ModelState.AddModelError("Error", ex.Message);
-
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex.Message);
                     return RedirectToAction("ServerError");
                 }
-
             }
             ModelState.AddModelError("Error", ErrorMessages.InvalidLogin);
             return View(model);
-
         }
-
-
-
-
-
+        protected async void SignUserIn(User user, UserAccount existingAccount)
+        {
+            var identity = new ClaimsIdentity(IdentityConstants.ApplicationScheme);
+            identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id));
+            identity.AddClaim(new Claim(ClaimTypes.Name, user.UserName));
+            await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, new ClaimsPrincipal(identity));
+            existingAccount.LastActive = DateTime.Now;
+            _context.SaveChanges();
+        }
         public IActionResult Register()
         {
-
             return View();
         }
 
@@ -400,6 +400,15 @@ namespace FruityNET.Controllers
             try
             {
                 var _currentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (_currentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+
+                var existingUser = _userStore.GetAccounts().FirstOrDefault(x => x.Username.Equals(model.Username));
+                if (existingUser != null && !existingUser.UserId.Equals(_currentUser.Id))
+                    throw new DomainException(ErrorMessages.UserAlreadyExists);
+
+
                 _currentUser.Email = model.Email;
                 _currentUser.UserName = model.Username;
 
@@ -410,14 +419,21 @@ namespace FruityNET.Controllers
                 }
                 if (ModelState.IsValid)
                 {
-
-
                     _userStore.Edit(existingAccount, model);
-
                     return RedirectToAction(ActionName.Profile);
-
                 }
                 return View(model);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+                else
+                {
+                    ViewBag.Message = ex.Message;
+                    return View(model);
+                }
             }
             catch (Exception ex)
             {

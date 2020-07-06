@@ -4,6 +4,11 @@
     ViewData["Title"] = "Edit";
 }
 
+@if (!String.IsNullOrEmpty(ViewBag.Message))
+{
+    <div class="alert alert-danger">@ViewBag.Message
+    </div>
+}
                 <br>
                 <h3 style="text-align: left;">Edit Profile</h3><br>
         <form method="post">

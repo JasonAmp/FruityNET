@@ -54,19 +54,21 @@ namespace FruityNET.Queries
             || existingAccount.AccountStatus.Equals(Status.Inactive))
                 throw new DomainException(ErrorMessages.UserDoesNotExist);
 
-            var FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
-            var FriendUsers = _FriendListStore.GetFriendsOfUser(FriendList.Id);
-            var GroupsWithUser = _GroupStore.GetGroupsWithUser(existingAccount.UserId);
-            var FriendRequests = _FriendListStore.GetIncomingFriendRequests(FriendList.Id);
-            var existingFriend = FriendUsers.FirstOrDefault(x => x.UserId.Equals(_CurrentUser.Id));
+            FriendList FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
+            FriendList CurrentFriendList = _FriendListStore.GetFriendListOfUser(_CurrentUser.Id);
+            var FriendUsers = _FriendListStore.GetFriendsOfUser(CurrentFriendList.Id);
+            List<Group> GroupsWithUser = _GroupStore.GetGroupsWithUser(existingAccount.UserId);
+            List<Request> FriendRequests = _FriendListStore.GetIncomingFriendRequests(FriendList.Id);
+            List<Request> CurrentUserRequests = _FriendListStore.GetIncomingFriendRequests(CurrentFriendList.Id);
+            FriendUser existingFriend = FriendUsers.FirstOrDefault(x => x.UserId.Equals(existingAccount.UserId));
 
-            var ProfileViewModel = CreateViewModel(existingAccount, GroupsWithUser, existingFriend, FriendList, FriendRequests);
+            var ProfileViewModel = CreateViewModel(existingAccount, GroupsWithUser, existingFriend, FriendList, FriendRequests,
+            CurrentFriendList, CurrentUserRequests);
             ProfileViewModel.Friends = GetFriendDTOs(FriendUsers);
-
             return ProfileViewModel;
         }
         public ProfileViewModel CreateViewModel(UserAccount existingAccount, List<Group> GroupsWithUser, FriendUser existingFriend,
-        FriendList FriendList, List<Request> FriendRequests)
+        FriendList FriendList, List<Request> FriendRequests, FriendList CurrentFriendList, List<Request> CurrentUserRequests)
         {
             var ProfileViewModel = new ProfileViewModel
             {
@@ -82,7 +84,8 @@ namespace FruityNET.Queries
                 Groups = GroupsWithUser,
                 PendingRequest = FriendRequests.FirstOrDefault(x => x.Username.Equals(_CurrentUser.UserName)),
                 FriendListID = FriendList.Id,
-                ExistingFriend = existingFriend
+                ExistingFriend = existingFriend,
+                RequestToCurrent = CurrentUserRequests.FirstOrDefault(x => x.Username.Equals(existingAccount.Username))
             };
             return ProfileViewModel;
         }

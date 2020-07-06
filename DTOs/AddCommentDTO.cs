@@ -27,6 +27,7 @@ namespace FruityNET.DTOs
         public string Username { get; set; }
 
         public DateTime DatePosted { get; set; }
+        public Guid CommentId { get; set; }
 
     }
 }

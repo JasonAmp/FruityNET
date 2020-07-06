@@ -1,0 +1,25 @@
+@using FruityNET.DTOs
+
+
+
+@model DeleteCommentDTO
+
+@{
+    ViewData["Title"] = "Delete Comment";
+}
+         <div class="alert alert-danger">Are you sure you want to delete this comment  "@Model.Content" ?
+                Changes can not be reverted if you proceed.
+    </div>
+
+
+ <a class="btn btn-default btn-sm"
+                        asp-route-id=@Model.PostID
+                        asp-action="ViewPost">
+                        Back To Post
+                </a><br><br>
+
+
+<form asp-action="ConfirmDelete" asp-route-id="@Model.CommentID" method="post" role="form">
+                
+            <button type="submit" class="btn btn-primary">Delete Comment</button><br>
+        </form>

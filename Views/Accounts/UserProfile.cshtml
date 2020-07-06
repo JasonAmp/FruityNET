@@ -19,7 +19,7 @@
                 <li class="list-group-item" style="color: red;">Role:  @Model.UserType</li>
                   <div class="card-body">
 
-                  @if(Model.ExistingFriend is null && Model.PendingRequest is null)
+                  @if(Model.ExistingFriend is null && Model.PendingRequest is null && Model.RequestToCurrent is null)
   {
         <a class="btn btn-info btn-sm"
                         asp-controller="FriendList"
@@ -41,6 +41,30 @@
                          asp-route-id="@Model.PendingRequest.Id">
                         <i class='fas fa-user-plus' style='font-size:14px;color:white'></i>
                         Cancel Invite
+                </a></p>
+  }
+    else if(Model.RequestToCurrent != null)
+  {
+       <p><a class="btn btn-primary btn-sm"
+                        asp-controller="FriendList"
+
+                        asp-action="Invites">
+
+                        <i class='fas fa-user-plus' style='font-size:14px;color:white'></i>
+                        Respond to Invite
+                </a></p>
+  }
+      else if(Model.ExistingFriend != null)
+  {
+       <p><a class="btn btn-danger btn-sm"
+                        asp-controller="FriendList"
+
+                        asp-action="Unfriend"
+                        asp-route-id="@Model.ExistingFriend.Id">
+
+
+                        <i class='fas fa-user-plus' style='font-size:14px;color:white'></i>
+                        Unfriend
                 </a></p>
   }
  </div>

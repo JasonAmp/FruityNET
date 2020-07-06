@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using FruityNET.ParameterStrings;
 using FruityNET.Enums;
 using FruityNET.Exceptions;
+using FruityNET.Queries;
 
 namespace FruityNET.Controllers
 {
@@ -28,10 +29,6 @@ namespace FruityNET.Controllers
         private readonly IFriendsListStore _FriendListStore;
         private readonly INotificationBox _notificationBox;
         private readonly ILogger<PostsController> _logger;
-
-
-
-
 
         public PostsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
         IUserStore _userStore, IPostStore _postStore, ICommentStore _commentStore, CurrentPostDTO _currentpost,
@@ -71,10 +68,7 @@ namespace FruityNET.Controllers
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
-
             }
-
-
         }
 
         [HttpPost]
@@ -105,11 +99,7 @@ namespace FruityNET.Controllers
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
-
             }
-
-
-
         }
 
 
@@ -126,62 +116,15 @@ namespace FruityNET.Controllers
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
 
-                var friendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
-                friendList.Users = _FriendListStore.GetFriendsOfUser(friendList.Id);
+                var GetAllPostsQuery = new GetAllPostsQuery(CurrentUser, existingAccount, _FriendListStore,
+                _notificationBox, _userStore, _postStore);
 
-                var Notifications = _notificationBox.GetUserNotifications(existingAccount.Username);
-                var FriendRequests = _FriendListStore.GetIncomingFriendRequests(friendList.Id);
-
-                var postViewDTO = new PostViewDto
-                {
-                    FriendRequestCount = FriendRequests.Count,
-                    NotificationCount = Notifications.Count,
-                    Permissions = existingAccount.UserType,
-                    AllPosts = new List<PostDTO>()
-                };
-                foreach (var friend in friendList.Users)
-                {
-                    var FriendAccount = _userStore.GetByIdentityUserId(friend.UserId);
-                    if (FriendAccount.AccountStatus.Equals(Status.Active))
-                    {
-                        var AllPosts = _postStore.AllPostByUser(friend.UserId);
-                        foreach (var post in AllPosts)
-                        {
-                            var PostDTO = new PostDTO
-                            {
-                                Id = post.Id,
-                                Content = post.Content,
-                                DatePosted = post.DatePosted,
-                                Username = friend.Username,
-                                UserId = FriendAccount.Id,
-                                Role = FriendAccount.UserType
-                            };
-                            postViewDTO.AllPosts.Add(PostDTO);
-                        }
-                    }
-
-                }
-
-                foreach (var post in _postStore.AllPostByCurrentUser(CurrentUser.Id))
-                {
-                    var PostDTO = new PostDTO
-                    {
-                        Id = post.Id,
-                        Content = post.Content,
-                        DatePosted = post.DatePosted,
-                        Username = existingAccount.Username,
-                        UserId = existingAccount.Id,
-                        IdentityId = CurrentUser.Id
-                    };
-                    postViewDTO.AllPosts.Add(PostDTO);
-                }
-                return View(postViewDTO);
+                return View(GetAllPostsQuery.Handle());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
-
             }
         }
 
@@ -192,58 +135,37 @@ namespace FruityNET.Controllers
             {
                 var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
                 if (CurrentUser is null)
-                    return RedirectToAction("Login", "Accounts");
+                    throw new DomainException(ErrorMessages.NotSignedIn);
 
                 var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
 
-                var post = _postStore.ViewPost(Id);
+                var existingPost = _postStore.ViewPost(Id);
 
-                if (post is null)
-                    return RedirectToAction("NotFound", "Accounts");
+                if (existingPost is null)
+                    throw new DomainException(ErrorMessages.PostDoesNotExist);
 
-                var OwnerOfPost = _userStore.GetByIdentityUserId(post.UserId);
+                var OwnerOfPost = _userStore.GetByIdentityUserId(existingPost.UserId);
 
-                var comments = from x in _commentStore.GetAllComments()
-                               where x.PostId == post.Id
-                               orderby x.DatePosted
-                               select x;
-                var ListOfComments = new List<ViewCommentDTO>();
-                foreach (var comment in comments)
-                {
-                    var OwnerOfComment = _commentStore.GetOwnerOfComment(comment.UserId);
-                    var CommentViewDTO = new ViewCommentDTO
-                    {
-                        UserId = comment.UserId,
-                        PostId = comment.PostId,
-                        Content = comment.Content,
-                        Username = OwnerOfComment.Username,
-                        DatePosted = comment.DatePosted
-                    };
-                    ListOfComments.Add(CommentViewDTO);
-                }
+                GetPostDetailsQuery GetPostDetailsQuery = new GetPostDetailsQuery(CurrentUser, OwnerOfPost,
+                existingPost, _userStore, _commentStore, existingAccount);
 
-                return View(new PostViewDetaisDTO
-                {
-                    Username = OwnerOfPost.Username,
-                    content = post.Content,
-                    DatePosted = post.DatePosted,
-                    comments = ListOfComments,
-                    PostId = post.Id,
-                    Permissions = existingAccount.UserType,
-                    UserID = CurrentUser.Id,
-                    PostUserRole = OwnerOfPost.UserType
-                });
+                return View(GetPostDetailsQuery.Handle());
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+
+                return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
-
             }
-
-
         }
 
         [HttpGet]
@@ -299,8 +221,6 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
             }
-
-
         }
 
         [HttpGet]
@@ -314,14 +234,15 @@ namespace FruityNET.Controllers
                 if (CurrentUser is null)
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
-
                 if (existingAccount.AccountStatus.Equals(Status.Suspended))
                     signInManager.SignOutAsync();
-
 
                 var existingPost = _postStore.GetById(Id);
                 if (existingPost is null)
                     throw new DomainException(ErrorMessages.PostDoesNotExist);
+
+                if (!CurrentUser.Id.Equals(existingPost.UserId) && existingAccount.UserType.Equals(UserType.User))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
                 return View(existingPost);
             }
@@ -332,16 +253,17 @@ namespace FruityNET.Controllers
                     return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
 
                 return RedirectToAction(ActionName.Login, ControllerName.Accounts);
-
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
-
             }
-
-
         }
 
         [HttpPost]
@@ -366,8 +288,6 @@ namespace FruityNET.Controllers
                         NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
                         RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
                     };
-
-
                     _notificationBox.SendNotifcation(Notification);
                     _context.SaveChanges();
                 }
@@ -378,10 +298,7 @@ namespace FruityNET.Controllers
             {
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
-
             }
-
-
         }
 
         [HttpGet]
@@ -411,9 +328,6 @@ namespace FruityNET.Controllers
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
 
             }
-
-
-
         }
 
         [HttpPost]
@@ -451,8 +365,6 @@ namespace FruityNET.Controllers
                             NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
                             RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
                         };
-
-
                         _notificationBox.SendNotifcation(Notification);
                     }
 
@@ -472,6 +384,104 @@ namespace FruityNET.Controllers
             }
 
 
+        }
+
+        [HttpGet]
+        public IActionResult DeleteComment(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingComment = _commentStore.GetAllComments().First(x => x.Id == Id);
+                var CommentOwner = _commentStore.GetOwnerOfComment(existingComment.UserId);
+                if (!CommentOwner.UserId.Equals(CurrentUser.Id))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+                var existingAccount = _userStore.GetByIdentityUserId(CommentOwner.UserId);
+
+                var DeleteCommentDTO = new DeleteCommentDTO()
+                {
+                    UserId = CommentOwner.UserId,
+                    PostID = existingComment.PostId,
+                    PostedByUsername = existingAccount.Username,
+                    CommentID = existingComment.Id,
+                    Content = existingComment.Content
+                };
+
+                return View(DeleteCommentDTO);
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.PostDoesNotExist))
+                    return RedirectToAction(ActionName.NotFound, ControllerName.Accounts);
+
+                return RedirectToAction(ActionName.Login, ControllerName.Accounts);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ConfirmDelete(Guid Id)
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingComment = _commentStore.GetAllComments().First(x => x.Id == Id);
+                if (existingComment is null)
+                    throw new DomainException(ErrorMessages.CommentDoesNotExist);
+
+                var CommentOwner = _commentStore.GetOwnerOfComment(existingComment.UserId);
+                if (!CommentOwner.UserId.Equals(CurrentUser.Id))
+                    throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
+
+                var DeleteCommentDTO = new DeleteCommentDTO()
+                {
+                    UserId = CommentOwner.UserId,
+                    PostID = existingComment.PostId,
+                    CommentID = existingComment.Id,
+                    Content = existingComment.Content
+                };
+                var PostID = new Guid(DeleteCommentDTO.PostID.ToString());
+
+                _commentStore.DeleteComment(existingComment);
+                _context.SaveChanges();
+
+                return RedirectToAction("ViewPost", "Posts", new { id = PostID });
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                if (ex.Message.Equals(ErrorMessages.NotSignedIn))
+                    return RedirectToAction("Login", "Accounts");
+
+                return RedirectToAction("NotFound", "Accounts");
+            }
+            catch (ForbiddenException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.NotAuthorized, ControllerName.Accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
+            }
         }
 
 

@@ -150,3 +150,9 @@
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Admin/Requests.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Admin/SendRequest.cshtml.g.cs
 /Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Admin/ApproveAdmin.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/CancelInvite.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/ConfirmCancel.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/ConfirmInvite.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/Invites.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/FriendList/SendInvite.cshtml.g.cs
+/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/obj/Debug/netcoreapp3.1/Razor/Views/Posts/DeleteComment.cshtml.g.cs

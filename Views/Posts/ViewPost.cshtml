@@ -49,6 +49,11 @@
     <h6 class="card-title">@comment.Username</h6>
     <h6 class="card-subtitle mb-2 text-muted">@comment.DatePosted</h6>
     <p class="card-text">@comment.Content</p>
+    <a class="btn btn-danger btn-sm"
+                        asp-action="DeleteComment"
+                        asp-route-id="@comment.CommentId" style="color: black;">
+                        Delete
+                </a>
     
   </div></div><br>
 }

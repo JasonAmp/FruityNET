@@ -20576,6 +20576,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/CancelInvite.cshtml",
+      "TargetPath": "Views\\FriendList\\CancelInvite.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/NotFound.cshtml",
       "TargetPath": "Views\\Accounts\\NotFound.cshtml",
       "FileKind": "mvc"
@@ -20671,6 +20676,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/ConfirmCancel.cshtml",
+      "TargetPath": "Views\\FriendList\\ConfirmCancel.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Home/Index.cshtml",
       "TargetPath": "Views\\Home\\Index.cshtml",
       "FileKind": "mvc"
@@ -20731,8 +20741,18 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/ConfirmInvite.cshtml",
+      "TargetPath": "Views\\FriendList\\ConfirmInvite.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/SignOut.cshtml",
       "TargetPath": "Views\\Accounts\\SignOut.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/Invites.cshtml",
+      "TargetPath": "Views\\FriendList\\Invites.cshtml",
       "FileKind": "mvc"
     },
     {
@@ -20748,6 +20768,11 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/SendFriendInvite.cshtml",
       "TargetPath": "Views\\FriendList\\SendFriendInvite.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Posts/DeleteComment.cshtml",
+      "TargetPath": "Views\\Posts\\DeleteComment.cshtml",
       "FileKind": "mvc"
     },
     {
@@ -20783,6 +20808,11 @@
     {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Groups/RemoveUser.cshtml",
       "TargetPath": "Views\\Groups\\RemoveUser.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/FriendList/SendInvite.cshtml",
+      "TargetPath": "Views\\FriendList\\SendInvite.cshtml",
       "FileKind": "mvc"
     },
     {

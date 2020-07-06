@@ -43,6 +43,8 @@ namespace FruityNET.EntityStore
             userAccount.Username = model.Username;
             userAccount.Location = model.Location;
             userAccount.Occupation = model.Occupation;
+            var IdentityUser = _Context.Users.Find(userAccount.UserId);
+            IdentityUser.UserName = model.Username;
             _Context.SaveChanges();
             return userAccount;
         }

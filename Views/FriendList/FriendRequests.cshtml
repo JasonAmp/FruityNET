@@ -14,9 +14,9 @@
 
 
 <h6 style="text-align: center;">Invites</h6>
-@if(Model.IncomingRequests.Count is 0)
-{<p style="text-align: center;">No Incoming Requests</p>}
-@foreach (var request in Model.IncomingRequests)
+@if(Model.RecievedInvites.Count is 0)
+{<p style="text-align: center;">No Invites</p>}
+@foreach (var request in Model.RecievedInvites)
 {
     <div class="card">
   <div class="card-body" style="text-align: center;">
@@ -40,15 +40,15 @@
 }
 <br>
 <br><br><br>
-<h6 style="text-align: center;" >Sent Requests</h6>
-@if(Model.OutgoingRequests.Count is 0)
-{<p style="text-align: center;">No Requests Sent</p>}
-@foreach (var request in Model.OutgoingRequests)
+<h6 style="text-align: center;" >Sent Invites</h6>
+@if(Model.SentInvites.Count is 0)
+{<p style="text-align: center;font-size: 10px;">No Invites Sent</p>}
+@foreach (var request in Model.SentInvites)
 {
     <div class="card">
   <div class="card-body">
     <h4 class="card-title">
-    <h6 class="card-text" style="text-align: center;">@request.Username</h6>
+    <h6 class="card-text" style="text-align: center; center;font-size: 10px;">@request.Username</h6>
     <h7 style="text-align: center;">Awaiting Response </h7>
     
   </div></div><br>

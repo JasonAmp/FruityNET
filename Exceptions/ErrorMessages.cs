@@ -3,6 +3,8 @@ namespace FruityNET.Exceptions
     public class ErrorMessages
     {
         public const string UserDoesNotExist = "User Does Not Exist.";
+        public const string CommentDoesNotExist = "Comment Does Not Exist.";
+
 
         public const string UserAlreadyExists = "An Account with provided Username or Email already exists.";
 
