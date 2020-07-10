@@ -286,7 +286,8 @@ namespace FruityNET.Controllers
                     {
                         Message = $"Your post '{existingPost.Content}' was deleted," + " " + "It may have violated community guidlines.",
                         NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
-                        RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
+                        RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username,
+                        NotificationDate = DateTime.Now
                     };
                     _notificationBox.SendNotifcation(Notification);
                     _context.SaveChanges();
@@ -361,9 +362,10 @@ namespace FruityNET.Controllers
                     {
                         var Notification = new Notification()
                         {
-                            Message = $"{CurrentUser.UserName} Has Commented on your Post '{existingPost.Content}' ",
+                            Message = $"{CurrentUser.UserName} has commented on your post '{existingPost.Content}' ",
                             NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingPost.UserId).Id,
-                            RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username
+                            RecieverUsername = _userStore.GetByIdentityUserId(existingPost.UserId).Username,
+                            NotificationDate = DateTime.Now
                         };
                         _notificationBox.SendNotifcation(Notification);
                     }

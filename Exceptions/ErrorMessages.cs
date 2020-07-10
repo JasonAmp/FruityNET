@@ -3,6 +3,7 @@ namespace FruityNET.Exceptions
     public class ErrorMessages
     {
         public const string UserDoesNotExist = "User Does Not Exist.";
+
         public const string CommentDoesNotExist = "Comment Does Not Exist.";
 
 

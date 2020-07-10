@@ -26,10 +26,13 @@ namespace FruityNET.Controllers
         private readonly IGroupStore _GroupStore;
         private readonly IGroupRequestStore _GroupRequestStore;
         private readonly ILogger<GroupsController> _logger;
+        private readonly INotificationBox _notificationBox;
+
 
 
         public GroupsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
-        IUserStore _userStore, IGroupStore _GroupStore, ILogger<GroupsController> _logger, IGroupRequestStore _GroupRequestStore)
+        IUserStore _userStore, IGroupStore _GroupStore, ILogger<GroupsController> _logger, IGroupRequestStore _GroupRequestStore,
+        INotificationBox _notificationBox)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -38,6 +41,7 @@ namespace FruityNET.Controllers
             this._GroupStore = _GroupStore;
             this._logger = _logger;
             this._GroupRequestStore = _GroupRequestStore;
+            this._notificationBox = _notificationBox;
         }
 
         [HttpGet]
@@ -227,6 +231,7 @@ namespace FruityNET.Controllers
         {
             try
             {
+                var existingGroup = _GroupStore.GetGroupById(addGroupUserDTO.Id);
                 if (String.IsNullOrEmpty(addGroupUserDTO.Username))
                     throw new DomainException(ErrorMessages.UserNotProvided);
 
@@ -237,7 +242,7 @@ namespace FruityNET.Controllers
                         throw new DomainException(ErrorMessages.UserDoesNotExist);
 
                     var existingGroupMember = (existingUser != null) ? _GroupStore.GetGroupMembers(addGroupUserDTO.Id)
-                    .FirstOrDefault(x => x.Username == addGroupUserDTO.Username) : null;
+                    .FirstOrDefault(x => x.Username == existingUser.Username) : null;
 
                     if (existingGroupMember != null)
                         throw new DomainException(ErrorMessages.GroupUserExists);
@@ -249,10 +254,12 @@ namespace FruityNET.Controllers
                         {
                             UserId = existingUser.UserId,
                             GroupId = addGroupUserDTO.Id,
-                            Username = addGroupUserDTO.Username,
+                            Username = existingUser.Username,
                             Type = GroupUserType.Member
                         };
                         _GroupStore.CreateGroupUser(GroupUser);
+                        var Message = $"You have been added to group '{existingGroup.Name}'";
+                        Notify(existingUser, existingGroup, Message);
                         ViewBag.Message = "Success";
                         return View(addGroupUserDTO);
                     }
@@ -270,6 +277,18 @@ namespace FruityNET.Controllers
                 _logger.LogError(ex.Message);
                 return RedirectToAction(ActionName.ServerError, ControllerName.Accounts);
             }
+        }
+        protected void Notify(UserAccount existingUser, Group existingGroup, string Message)
+        {
+            var NotificationBox = _notificationBox.GetNotificationBoxByUserId(existingUser.UserId);
+            _notificationBox.SendNotifcation(new Notification()
+            {
+                NotificationBoxId = NotificationBox.Id,
+                RecieverUsername = existingUser.Username,
+                NotificationDate = DateTime.Now,
+                Message = Message
+            });
+            _context.SaveChanges();
         }
         [HttpGet]
         public IActionResult SearchGroup()
@@ -450,10 +469,15 @@ namespace FruityNET.Controllers
             try
             {
                 var existingGroupMember = _GroupStore.GetGroupMemberById(GroupMemberDTO.Id);
+                var existingUser = _userStore.GetByIdentityUserId(existingGroupMember.UserId);
                 var GroupID = new Guid(existingGroupMember.GroupId.ToString());
+                var existingGroup = _GroupStore.GetGroupById(GroupID);
 
 
                 _GroupStore.DeleteGroupUser(existingGroupMember);
+                var Message = $"You have been removed from group '{existingGroup.Name}'";
+
+                Notify(existingUser, existingGroup, Message);
                 return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
             }
             catch (Exception ex)
@@ -593,6 +617,11 @@ namespace FruityNET.Controllers
                 var existingGroupUser = _GroupStore.GetGroupMemberById(Id);
                 existingGroupUser.Type = GroupUserType.Admin;
                 var GroupID = existingGroupUser.GroupId;
+                var existingGroup = _GroupStore.GetGroupById(GroupID);
+                var existingUser = _userStore.GetByIdentityUserId(existingGroupUser.UserId);
+                var Message = $"You are now an admin of group '{existingGroup.Name}'";
+
+                Notify(existingUser, existingGroup, Message);
                 _context.SaveChanges();
                 return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
 
@@ -660,6 +689,11 @@ namespace FruityNET.Controllers
                 var existingGroupUser = _GroupStore.GetGroupMemberById(Id);
                 existingGroupUser.Type = GroupUserType.Member;
                 var GroupID = existingGroupUser.GroupId;
+                var existingGroup = _GroupStore.GetGroupById(GroupID);
+                var existingUser = _userStore.GetByIdentityUserId(existingGroupUser.UserId);
+                var Message = $"Your admin permissions of group '{existingGroup.Name}' have been removed.";
+
+                Notify(existingUser, existingGroup, Message);
                 _context.SaveChanges();
                 return RedirectToAction("GroupDetails", "Groups", new { id = GroupID });
 

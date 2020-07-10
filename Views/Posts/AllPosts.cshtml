@@ -17,7 +17,7 @@
    
 @if(@Model.NotificationCount != 0 || @Model.FriendRequestCount != 0)
 {
-        <div class="alert alert-info">Hi @UserManager.GetUserName(User), You have @sum notifications.
+        <div class="alert alert-secondary" style="text-align: center;">Hi @UserManager.GetUserName(User), You have @sum notifications.
     </div>
 }
 
@@ -68,8 +68,14 @@
                         asp-action="UserProfile"
 
                          asp-route-id="@post.UserId">
-                        
-                       @post.Username
+                        @if(post.Role.Equals(UserType.Admin)||post.Role.Equals(UserType.SiteOwner))
+                        {
+                                <i style="font-size:10px" class="fa">&#xf0ad;</i> @post.Username
+                        }
+                        else{
+                                @post.Username
+
+                        }
 
                 </a>
                 }

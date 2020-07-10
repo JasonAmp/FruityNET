@@ -124,14 +124,8 @@ namespace FruityNET.Controllers
                     RequestUserId = RequestUser.Id,
                     Username = _currentUser.UserName
                 };
-                var Notification = new Notification()
-                {
-                    Message = $"{RequestUser.Username} sent you a Friend Invite.",
-                    NotificationBoxId = _notificationBox.GetNotificationBoxByUserId(existingFriendList.UserId).Id,
-                    RecieverUsername = Recipient.Username
-                };
+
                 _RequestStore.SendRequest(Request);
-                _notificationBox.SendNotifcation(Notification);
 
                 _context.SaveChanges();
                 ViewBag.Message = "Success";

@@ -37,7 +37,6 @@ namespace FruityNET.Controllers
         private readonly IGroupStore GroupStore;
         private readonly ILogger<AccountsController> _logger;
         private readonly IAdminRequestStore _AdminRequestStore;
-
         private readonly IMapper _mapper;
 
 
@@ -180,6 +179,7 @@ namespace FruityNET.Controllers
                     {
                         if (existingAccount.AccountStatus.Equals(Status.Suspended))
                             throw new DomainException(ErrorMessages.AccountSuspended);
+                        throw new DomainException(ErrorMessages.AccountInactive);
                     }
 
                     var user = await userManager.FindByIdAsync(existingAccount.UserId);
@@ -226,11 +226,12 @@ namespace FruityNET.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var UserWithEmail = _userStore.GetAccounts().First(x => x.Email.Equals(model.Email));
+                    var UserWithEmail = _userStore.GetAccounts().FirstOrDefault(x => x.Email.Equals(model.Email));
                     if (UserWithEmail != null)
                     {
-                        _logger.LogError($"Email '{model.Email}' is taken.");
-                        ModelState.AddModelError("Error", $"Email '{model.Email}' is taken.");
+                        var Message = $"Email '{model.Email}' is taken.";
+
+                        throw new DomainException(Message);
                     }
 
                     var user = new User
@@ -286,6 +287,13 @@ namespace FruityNET.Controllers
                 {
                     ModelState.AddModelError("Error", ErrorMessages.RequiredValuesNotProvided);
                 }
+                return View(model);
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("Error", ex.Message);
                 return View(model);
 
             }

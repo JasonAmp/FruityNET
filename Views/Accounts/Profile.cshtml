@@ -13,7 +13,7 @@
 }
 @if(@Model.NotificationCount != 0)
 {
-        <div class="alert alert-info">You have @Model.NotificationCount notifications.
+        <div class="alert alert-secondary">You have @Model.NotificationCount notifications.
     </div>
 }
 <br>
@@ -68,13 +68,13 @@ Admin Portal
                         @friend.Username
 
                 </a>
-          <a 
+          <a class="btn btn-secondary btn-sm"
                         asp-controller="FriendList"
 
                         asp-action="Unfriend"
 
                          asp-route-id="@friend.Id">
-                        <i class="fa fa-remove" style="color: red;"></i>
+                        <i class='fas fa-user-minus' style='font-size:10px;color:red'></i>
 
                 </a>
         </li>
