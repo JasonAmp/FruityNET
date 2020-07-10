@@ -14,7 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FruityNET.Entities;
 using FruityNET.DTOs;
-
 using FruityNET.EntityStore;
 using FruityNET.IEntityStore;
 using static FruityNET.Controllers.PostsController;
@@ -33,7 +32,6 @@ namespace FruityNET
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddDbContextPool<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("aws")));
             services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>()

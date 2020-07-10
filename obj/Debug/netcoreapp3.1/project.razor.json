@@ -20531,6 +20531,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/AccountDetails.cshtml",
+      "TargetPath": "Views\\Accounts\\AccountDetails.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/jasonampah/Documents/Dev/C#/MVCApps/FruityNET/Views/Accounts/PermissionExists.cshtml",
       "TargetPath": "Views\\Accounts\\PermissionExists.cshtml",
       "FileKind": "mvc"

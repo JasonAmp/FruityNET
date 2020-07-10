@@ -23,12 +23,7 @@ namespace FruityNET.Controllers
         private readonly IFriendsListStore _FriendListStore;
         private readonly IRequestStore _RequestStore;
         private readonly INotificationBox _notificationBox;
-
         private readonly ILogger<FriendListController> _logger;
-
-
-
-
 
         public FriendListController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
         IUserStore _userStore, IFriendsListStore _FriendListStore, IRequestStore _RequestStore, INotificationBox _notificationBox,
@@ -69,10 +64,8 @@ namespace FruityNET.Controllers
 
                 var CurrentFriendList = _FriendListStore.GetFriendListOfUser(CurrentUser.Id);
                 var RequestsOfCurrent = _FriendListStore.GetIncomingFriendRequests(CurrentFriendList.Id);
-
                 var Recipient = _userStore.GetByIdentityUserId(FriendList.UserId);
                 var RequestsOfRecipient = _FriendListStore.GetIncomingFriendRequests(FriendList.Id);
-
                 var CurrentAsSender = RequestsOfRecipient.FirstOrDefault(x => x.Username.Equals(CurrentUser.UserName));
                 var PendingFromOther = RequestsOfCurrent.FirstOrDefault(x => x.Username.Equals(Recipient.Username));
 

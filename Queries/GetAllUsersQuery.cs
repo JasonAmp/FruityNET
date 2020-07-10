@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AutoMapper;
 using FruityNET.DTOs;
 using FruityNET.Entities;
 using FruityNET.Enums;
@@ -18,6 +19,7 @@ namespace FruityNET.Queries
         private IdentityUser CurrentUser;
         private readonly UserAccount existingAccount;
         private readonly SignInManager<User> signInManager;
+
 
 
         public GetAllUsersQuery(IUserStore _UserStore, IFriendsListStore _FriendListStore,

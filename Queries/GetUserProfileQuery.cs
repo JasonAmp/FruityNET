@@ -12,6 +12,8 @@ using FruityNET.Models;
 using FruityNET.ParameterStrings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
+using FruityNET.Mapper;
 
 namespace FruityNET.Queries
 {
@@ -26,6 +28,7 @@ namespace FruityNET.Queries
         private readonly ILogger<AccountsController> _Logger;
         private readonly UserAccount _ExistingAccount;
         private readonly IdentityUser _CurrentUser;
+        private readonly IMapper _mapper;
 
         public GetUserProfileQuery(Guid Id, UserManager<User> UserManager,
          IUserStore UserStore, IFriendsListStore FriendListStore, IRequestStore RequestStore,
@@ -41,6 +44,7 @@ namespace FruityNET.Queries
             _Logger = Logger;
             _CurrentUser = Currentuser;
             _ExistingAccount = existingAccount;
+            _mapper = new MapperConfiguration(cfg => cfg.AddProfile<EntityMapper>()).CreateMapper();
         }
 
 
@@ -56,15 +60,17 @@ namespace FruityNET.Queries
 
             FriendList FriendList = _FriendListStore.GetFriendListOfUser(existingAccount.UserId);
             FriendList CurrentFriendList = _FriendListStore.GetFriendListOfUser(_CurrentUser.Id);
-            var FriendUsers = _FriendListStore.GetFriendsOfUser(CurrentFriendList.Id);
+            var FriendsOfUser = _FriendListStore.GetFriendsOfUser(FriendList.Id);
+            var FriendsOfCurrent = _FriendListStore.GetFriendsOfUser(CurrentFriendList.Id);
+
             List<Group> GroupsWithUser = _GroupStore.GetGroupsWithUser(existingAccount.UserId);
             List<Request> FriendRequests = _FriendListStore.GetIncomingFriendRequests(FriendList.Id);
             List<Request> CurrentUserRequests = _FriendListStore.GetIncomingFriendRequests(CurrentFriendList.Id);
-            FriendUser existingFriend = FriendUsers.FirstOrDefault(x => x.UserId.Equals(existingAccount.UserId));
+            FriendUser existingFriend = FriendsOfCurrent.FirstOrDefault(x => x.UserId.Equals(existingAccount.UserId));
 
             var ProfileViewModel = CreateViewModel(existingAccount, GroupsWithUser, existingFriend, FriendList, FriendRequests,
             CurrentFriendList, CurrentUserRequests);
-            ProfileViewModel.Friends = GetFriendDTOs(FriendUsers);
+            ProfileViewModel.Friends = GetFriendDTOs(FriendsOfUser);
             return ProfileViewModel;
         }
         public ProfileViewModel CreateViewModel(UserAccount existingAccount, List<Group> GroupsWithUser, FriendUser existingFriend,
@@ -92,18 +98,12 @@ namespace FruityNET.Queries
 
         public List<FriendDTO> GetFriendDTOs(List<FriendUser> Friends)
         {
-            var FriendDTOs = new List<FriendDTO>();
-            foreach (var friend in Friends)
+            var FriendDTOs = _mapper.Map<List<FriendDTO>>(Friends);
+
+            foreach (var friend in FriendDTOs)
             {
                 var account = _UserStore.GetByUsername(friend.Username);
-                var FriendDTO = new FriendDTO()
-                {
-                    Id = friend.Id,
-                    UserId = friend.UserId,
-                    Username = friend.Username,
-                    AccountId = account.Id
-                };
-                FriendDTOs.Add(FriendDTO);
+                friend.AccountId = account.Id;
             }
             return FriendDTOs;
         }

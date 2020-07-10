@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using FruityNET.Queries;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using AutoMapper;
+using FruityNET.Mapper;
 
 namespace FruityNET.Controllers
 {
@@ -36,6 +38,8 @@ namespace FruityNET.Controllers
         private readonly ILogger<AccountsController> _logger;
         private readonly IAdminRequestStore _AdminRequestStore;
 
+        private readonly IMapper _mapper;
+
 
         public AccountsController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext _context,
         IUserStore _userStore, IFriendsListStore _FriendListStore, IRequestStore _RequestStore, INotificationBox _notificationBox,
@@ -51,7 +55,44 @@ namespace FruityNET.Controllers
             this.GroupStore = GroupStore;
             this._logger = _logger;
             this._AdminRequestStore = _AdminRequestStore;
+            _mapper = new MapperConfiguration(cfg => cfg.AddProfile<EntityMapper>()).CreateMapper();
         }
+
+        [HttpGet]
+        public IActionResult AccountDetails()
+        {
+            try
+            {
+                var CurrentUser = _context.Users.Find(userManager.GetUserId(User));
+                if (CurrentUser is null)
+                    throw new DomainException(ErrorMessages.NotSignedIn);
+
+                var existingAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
+                if (existingAccount.AccountStatus.Equals(Status.Suspended))
+                    signInManager.SignOutAsync();
+
+                var AccountDetails = new AccountDetailsDTO()
+                {
+                    FirstName = existingAccount.FirstName,
+                    LastName = existingAccount.LastName,
+                    Username = existingAccount.Username,
+                    EmailAddress = CurrentUser.Email
+                };
+                return View(AccountDetails);
+
+            }
+            catch (DomainException ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("Login", "Accounts");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return RedirectToAction("ServerError");
+            }
+        }
+
 
         [HttpGet]
         public IActionResult AdminPortal()
@@ -71,32 +112,16 @@ namespace FruityNET.Controllers
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
                 var AdminRequests = _AdminRequestStore.GetAll();
+                var AllAccounts = _userStore.GetAccounts().FindAll(x => x.UserId != CurrentUser.Id);
+
                 var AdminPortalDTO = new AdminPortalViewDTO()
                 {
                     RequestCount = AdminRequests.Count,
                     UserId = CurrentUser.Id,
-                    Accounts = new List<AccountDTO>(),
+                    Accounts = _mapper.Map<List<AccountDTO>>(AllAccounts),
                     CurrentUserPermission = existingAccount.UserType
 
                 };
-                var AllAccounts = _userStore.GetAccounts().FindAll(x => x.UserId != CurrentUser.Id);
-                foreach (var user in AllAccounts)
-                {
-                    var AccountDTO = new AccountDTO()
-                    {
-                        Id = user.Id,
-                        UserId = user.UserId,
-                        Username = user.Username,
-                        UserType = user.UserType,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                        LastActive = user.LastActive,
-                        DateJoined = user.DateJoined,
-                        Email = user.Email,
-                        AccountStatus = user.AccountStatus
-                    };
-                    AdminPortalDTO.Accounts.Add(AccountDTO);
-                }
                 return View(AdminPortalDTO);
             }
 
@@ -328,21 +353,17 @@ namespace FruityNET.Controllers
                     UserType = existingAccount.UserType,
                     Groups = GroupsWithUser,
                     UserId = _currentUser.Id,
-                    NotificationCount = NotificationCount
+                    NotificationCount = NotificationCount,
+                    Friends = _mapper.Map<List<FriendDTO>>(FriendUsers)
                 };
-                foreach (var friend in FriendUsers)
+                foreach (var friend in ProfileViewModel.Friends)
                 {
                     var account = _userStore.GetByUsername(friend.Username);
                     if (account.AccountStatus.Equals(Status.Active))
+                        friend.AccountId = account.Id;
+                    else
                     {
-                        var FriendDTO = new FriendDTO()
-                        {
-                            Id = friend.Id,
-                            UserId = friend.UserId,
-                            Username = friend.Username,
-                            AccountId = account.Id
-                        };
-                        ProfileViewModel.Friends.Add(FriendDTO);
+                        ProfileViewModel.Friends.Remove(friend);
                     }
 
                 }
