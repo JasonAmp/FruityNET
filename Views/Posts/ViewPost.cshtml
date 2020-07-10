@@ -20,7 +20,8 @@
     <h6 class="card-title">@Model.Username</h6>
     <p class="card-text">@Model.content</p>
         <h7 class="card-subtitle mb-2 text-muted">@Model.DatePosted</h7><br>
-           @if((Model.UserID == UserManager.GetUserId(User) || Model.Permissions == UserType.Admin || Model.Permissions == UserType.SiteOwner) && Model.PostUserRole.Equals(UserType.User))
+           @if(( Model.Permissions == UserType.Admin || Model.Permissions == UserType.SiteOwner) && Model.PostUserRole.Equals(UserType.User)
+           || (Model.UserID == UserManager.GetUserId(User)))
         {
    <a class="btn btn-default btn-sm"
                         asp-action="Edit"
@@ -31,7 +32,7 @@
                         asp-action="Delete"
                         asp-route-id="@Model.PostId">
                         
-                         <i class="fa fa-remove" style="color: red;"></i></a>
+                         <i class='fas fa-trash' style='font-size:12px; color:black;'></i></a>
                              
                 }
                 <a class="btn btn-default btn-sm"
@@ -49,11 +50,15 @@
     <h6 class="card-title">@comment.Username</h6>
     <h6 class="card-subtitle mb-2 text-muted">@comment.DatePosted</h6>
     <p class="card-text">@comment.Content</p>
-    <a class="btn btn-danger btn-sm"
+    @if(comment.Username.Equals(UserManager.GetUserName(User)))
+    {
+      <a class="btn btn-secondary btn-sm"
                         asp-action="DeleteComment"
                         asp-route-id="@comment.CommentId" style="color: black;">
-                        Delete
+                        <i class='fas fa-trash' style='font-size:12px; color:black;'></i>
                 </a>
+    }
+    
     
   </div></div><br>
 }

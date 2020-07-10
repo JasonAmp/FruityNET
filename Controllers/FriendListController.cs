@@ -440,7 +440,7 @@ namespace FruityNET.Controllers
                     throw new DomainException(ErrorMessages.UserDoesNotExist);
                 var existingAccount = _userStore.GetByIdentityUserId(existingUser.UserId);
                 var existingRequest = _RequestStore.GetAllRequests()
-                .FirstOrDefault(x => x.Username.Equals(existingUser.Username));
+                .FirstOrDefault(x => x.RequestUserId.Equals(Id));
                 var RecipientFriendsList = _FriendListStore.GetFriendListById(existingRequest.FriendListId);
                 var RecipientAccount = _userStore.GetByIdentityUserId(RecipientFriendsList.UserId);
 

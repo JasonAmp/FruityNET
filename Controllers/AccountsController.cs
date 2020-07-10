@@ -75,7 +75,9 @@ namespace FruityNET.Controllers
                 {
                     RequestCount = AdminRequests.Count,
                     UserId = CurrentUser.Id,
-                    Accounts = new List<AccountDTO>()
+                    Accounts = new List<AccountDTO>(),
+                    CurrentUserPermission = existingAccount.UserType
+
                 };
                 var AllAccounts = _userStore.GetAccounts().FindAll(x => x.UserId != CurrentUser.Id);
                 foreach (var user in AllAccounts)
@@ -631,7 +633,7 @@ namespace FruityNET.Controllers
 
 
                 var CurrentUserAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-                if (CurrentUserAccount.UserType.Equals(UserType.User))
+                if (!CurrentUserAccount.UserType.Equals(UserType.SiteOwner))
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
                 var existingAccount = _userStore.GetById(Id);
@@ -717,7 +719,7 @@ namespace FruityNET.Controllers
                     throw new DomainException(ErrorMessages.NotSignedIn);
 
                 var CurrentUserAccount = _userStore.GetByIdentityUserId(CurrentUser.Id);
-                if (CurrentUserAccount.UserType.Equals(UserType.User))
+                if (!CurrentUserAccount.UserType.Equals(UserType.SiteOwner))
                     throw new ForbiddenException(ErrorMessages.ForbiddenAccess);
 
                 if (CurrentUserAccount.AccountStatus.Equals(Status.Suspended))

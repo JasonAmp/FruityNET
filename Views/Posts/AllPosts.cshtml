@@ -17,7 +17,7 @@
    
 @if(@Model.NotificationCount != 0 || @Model.FriendRequestCount != 0)
 {
-        <div class="alert alert-info">You have @sum notifications.
+        <div class="alert alert-info">Hi @UserManager.GetUserName(User), You have @sum notifications.
     </div>
 }
 

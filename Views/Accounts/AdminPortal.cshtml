@@ -41,7 +41,8 @@
       <td>@account.LastActive</td>
       <td>@account.UserType</td>
       <td>
-          @if(account.UserType != UserType.Admin && account.UserType != UserType.SiteOwner && account.AccountStatus.Equals(Status.Active))
+          @if(account.UserType != UserType.Admin && account.UserType != UserType.SiteOwner && account.AccountStatus.Equals(Status.Active) && 
+          Model.CurrentUserPermission.Equals(UserType.SiteOwner))
           {
                <a class="btn btn-info btn-sm"
                         asp-action="GrantAdminAccess"
@@ -49,7 +50,8 @@
                         Grant Admin 
                 </a>
           }
-          else if(account.UserType == UserType.Admin && account.AccountStatus.Equals(Status.Active))
+          else if(account.UserType == UserType.Admin && account.AccountStatus.Equals(Status.Active)&& 
+          Model.CurrentUserPermission.Equals(UserType.SiteOwner))
           {
               <a class="btn btn-danger btn-sm"
                         asp-action="RevokeAdminAccess"
@@ -61,7 +63,8 @@
          
       </td>
       <td>
-          @if(account.AccountStatus == Status.Active && account.UserType != UserType.SiteOwner)
+          @if((account.AccountStatus == Status.Active && account.UserType == UserType.User) || 
+          Model.CurrentUserPermission.Equals(UserType.SiteOwner))
           {
                <a class="btn btn-danger btn-sm"
                         asp-action="Suspend"

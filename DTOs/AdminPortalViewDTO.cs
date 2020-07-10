@@ -8,8 +8,9 @@ namespace FruityNET.DTOs
     {
         public string UserId { get; set; }
         public List<AccountDTO> Accounts { get; set; }
-
         public int RequestCount { get; set; }
+        public UserType CurrentUserPermission { get; set; }
+
     }
 
     public class AccountDTO
